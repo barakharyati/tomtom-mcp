@@ -42,4 +42,18 @@ export const tomtomTrafficSchema = {
     .number()
     .optional()
     .describe("Unix Timestamp in seconds for traffic model. Use current time if not provided."),
+
+  timeValidityFilter: z
+    .string()
+    .optional()
+    .describe(
+      "Filter incidents by occurrence time. Values: 'present' (current incidents), 'future' (planned incidents). Multiple values comma-separated. Default: 'present'."
+    ),
+  
+  fields: z
+    .string()
+    .optional()
+    .describe(
+      "Fields to include in response, nested as in response schema. Default: basic incident data. For all fields use full object notation with incidents{type,geometry{type,coordinates},properties{...}}."
+    ),
 };

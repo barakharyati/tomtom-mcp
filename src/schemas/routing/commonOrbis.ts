@@ -33,21 +33,21 @@ export const coordinateSchema = z.object({
 // Common routing options schema for reuse
 export const routingOptionsSchema = {
   routeType: z
-    .enum(["fastest", "shortest", "eco", "thrilling"])
+    .enum(["fast", "short", "efficient", "thrilling"])
     .optional()
     .describe(
-      "Route optimization: 'fastest' (time-optimized), 'shortest' (distance-optimized), 'eco' (fuel-efficient), 'thrilling' (scenic)."
+      "Route optimization: 'fast' (time-optimized), 'short' (distance-optimized), 'efficient' (fuel-efficient), 'thrilling' (scenic)."
     ),
 
   travelMode: z
-    .enum(["car", "pedestrian", "bicycle", "truck", "taxi", "bus", "van"])
+    .enum(["car"])
     .optional()
     .describe("Transportation mode. Default: 'car'."),
 
   traffic: z
-    .boolean()
+    .enum(["live", "historical"])
     .optional()
-    .describe("Include real-time traffic data for more accurate ETAs and route suggestions."),
+    .describe("Traffic consideration: 'live' (real-time + historical), 'historical' (historical only)."),
 
   avoid: z
     .array(z.string())
@@ -108,6 +108,26 @@ export const routingOptionsSchema = {
     .optional()
     .describe("Additional routing data formats to include in the response."),
 
+  minDeviationDistance: z
+    .number()
+    .optional()
+    .describe("Minimum distance (meters) alternatives must follow the reference route from origin."),
+
+  minDeviationTime: z
+    .number()
+    .optional() 
+    .describe("Minimum time (seconds) alternatives must follow the reference route from origin."),
+
+  supportingPointIndexOfOrigin: z
+    .number()
+    .optional()
+    .describe("Index hint for disambiguating polyline origin point (0 to polyline size - 1)."),
+
+  reconstructionMode: z
+    .enum(["track", "route", "update"])
+    .optional()
+    .describe("How to reconstruct polyline: 'track' (flexible), 'route' (close match), 'update' (ignore restrictions)."),
+
 };
 
 // Vehicle specification schema for commercial routing
@@ -166,6 +186,16 @@ export const vehicleSchema = {
     .number()
     .optional()
     .describe("Fuel energy density in megajoules per liter."),
+
+  vehicleHasElectricTollCollectionTransponder: z
+    .enum(["all", "none"])
+    .optional()
+    .describe("ETC transponder availability: 'all' (has transponder), 'none' (avoid ETC-only roads)."),
+
+  arrivalSidePreference: z
+    .enum(["anySide", "curbSide"])
+    .optional()
+    .describe("Preferred arrival side: 'anySide' (either side), 'curbSide' (minimize crossings)."),
 
   // Efficiency parameters
   accelerationEfficiency: z.number().optional().describe("Efficiency during acceleration (0-1)."),

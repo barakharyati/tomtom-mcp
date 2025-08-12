@@ -47,6 +47,7 @@ export const tomtomFuzzySearchSchema = {
   relatedPois: z.string().optional().describe("Include related points of interest"),
   ext: z.string().optional().describe("Extended parameters for the search"),
   connectors: z.boolean().optional().describe("Include connector information for EV stations"),
+  categorySet: z.string().optional().describe("Filter by POI category IDs. Examples: '7315' (restaurants), '7315025,7315017' (Italian or French restaurants), '9663' (EV charging). See POI Categories endpoint for full list."),
 };
 
 export const tomtomPOISearchSchema = {
@@ -84,6 +85,12 @@ export const tomtomPOISearchSchema = {
   ofs: z.number().optional().describe("Offset for pagination of results"),
   relatedPois: z.string().optional().describe("Include related points of interest"),
   ext: z.string().optional().describe("Extended parameters for the search"),
+  categorySet: z
+    .string()
+    .optional()
+    .describe(
+      "Filter by POI category IDs. Examples: '7315' (restaurants), '7315025,7315017' (Italian or French restaurants). See POI Categories endpoint for full list."
+    ),
 };
 
 export const tomtomNearbySearchSchema = {
@@ -128,6 +135,7 @@ export const tomtomGeocodeSearchSchema = {
     .describe(
       "Filter results by geographic entity types. Valid values: PostalCodeArea, CountryTertiarySubdivision, CountrySecondarySubdivision, MunicipalitySubdivision, MunicipalitySecondarySubdivision, Country, CountrySubdivision, Neighbourhood, Municipality. Note: This parameter is for geographic entities only, not POIs. For POI filtering, use categorySet instead"
     ),
+  ofs: z.number().optional().describe("Offset for pagination of results"),
 };
 
 export const tomtomReverseGeocodeSearchSchema = {
@@ -152,4 +160,22 @@ export const tomtomReverseGeocodeSearchSchema = {
     .number()
     .optional()
     .describe("Heading direction in degrees (0-360) for improved accuracy on roads"),
+  returnRoadClass: z
+    .string()
+    .optional()
+    .describe("Enable return of roadClass array for street-level results. Value: 'Functional' (road classification based on network importance)"),
+  entityType: z
+    .string()
+    .optional()
+    .describe(
+      "Filter by geography entity types. Available: Country, CountrySubdivision, CountrySecondarySubdivision, CountryTertiarySubdivision, Municipality, MunicipalitySubdivision, MunicipalitySecondarySubdivision, Neighbourhood, PostalCodeArea. When set, heading/returnRoadClass/returnSpeedLimit/returnMatchType are ignored."
+    ),
+  callback: z
+    .string()
+    .optional()
+    .describe("Callback method name for JSONP responses. Default: 'cb'"),
+  filter: z
+    .string()
+    .optional()
+    .describe("Exclude address-carrying elements for closest match. Value: 'BackRoads' (excludes unofficial roads, paths, tracks for more accurate addressing)"),
 };
