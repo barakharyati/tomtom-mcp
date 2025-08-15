@@ -21,26 +21,32 @@ import { createSearchTools } from "./tools/searchTools";
 import { createRoutingTools } from "./tools/routingTools";
 import { createTrafficTools } from "./tools/trafficTools";
 import { createMapTools } from "./tools/mapTools";
+import { createSearchOrbisTools } from "./tools/searchOrbisTools";
+import { createRoutingOrbisTools } from "./tools/routingOrbisTools";
+import { createTrafficOrbisTools } from "./tools/trafficOrbisTools";
 
 /**
  * Factory function that creates and configures a TomTom MCP server instance
  */
 export function createServer(): McpServer {
-  logger.info("Initializing TomTom MCP Server");
-
+  const isOrbis = process.env.ENVIRONMENT === "orbis";
+  const serverName = isOrbis ? "TomTom Orbis MCP Server" : "TomTom MCP Server";
+  
+  logger.info(`Initializing ${serverName}`);
   validateServerApiKey();
-
+  
   const server = new McpServer({
-    name: "TomTom MCP Server",
+    name: serverName,
     version: "1.0.0",
   });
-
+  
   // Register all tools
-  registerTools(server);
-
-  logger.info("✅ TomTom MCP Server initialized with all tools");
+  registerTools(server, isOrbis);
+  
+  logger.info(`✅ ${serverName} initialized with all tools`);
   return server;
 }
+
 
 /**
  * Validates API key at startup
@@ -58,16 +64,19 @@ function validateServerApiKey(): void {
 /**
  * Registers all tools with the server
  */
-function registerTools(server: McpServer): void {
-  // Register search and geocoding tools
-  createSearchTools(server);
-
-  // Register routing and navigation tools
-  createRoutingTools(server);
-
-  // Register traffic tools
-  createTrafficTools(server);
-
-  // Register mapping tools
-  createMapTools(server);
+function registerTools(server: McpServer, isOrbis: boolean): void {
+  if (isOrbis) {
+    logger.info("Registering Orbis tools");
+    // Register Orbis tools
+    createSearchOrbisTools(server);
+    createRoutingOrbisTools(server);
+    createTrafficOrbisTools(server);
+  } else {
+    logger.info("Registering TomTom tools");
+    // Register TomTom tools
+    createSearchTools(server);
+    createRoutingTools(server);
+    createTrafficTools(server);
+    createMapTools(server);
+  }
 }
