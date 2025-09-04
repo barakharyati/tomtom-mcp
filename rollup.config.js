@@ -39,6 +39,10 @@ export default {
     // list your external dependencies here, e.g.:
     'axios',
     'express',
+    // Dynamic map dependencies (optional)
+    '@maplibre/maplibre-gl-native',
+    'canvas',
+    '@turf/turf',
     // Node built-ins:
     'fs', 'path', 'crypto', /* etc */
   ],

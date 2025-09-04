@@ -21,6 +21,7 @@ describe("schemas index", () => {
   it("should export all expected schemas", () => {
     expect(Object.keys(schemas).sort()).toEqual(
       [
+        "tomtomDynamicMapSchema",
         "tomtomFuzzySearchSchema",
         "tomtomPOISearchSchema",
         "tomtomNearbySearchSchema",

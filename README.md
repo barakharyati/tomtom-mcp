@@ -106,6 +106,131 @@ These guides help you integrate the MCP server with your tools and environments:
 | `tomtom-reachable-range` | Determine coverage areas by time/distance | https://developer.tomtom.com/routing-api/documentation/tomtom-maps/calculate-reachable-range |
 | `tomtom-traffic` | Real-time incidents data | https://developer.tomtom.com/traffic-api/documentation/traffic-incidents/traffic-incidents-service  |
 | `tomtom-static-map` | Generate custom map images | https://developer.tomtom.com/map-display-api/documentation/raster/static-image |
+| `tomtom-dynamic-map` | **Advanced map rendering with custom markers, routes, and traffic visualization** | [Dynamic Map API Documentation](#dynamic-map-api) |
+
+---
+
+## Dynamic Map API
+
+The `tomtom-dynamic-map` tool provides advanced server-side map rendering capabilities with features not available in the standard Static Image API.
+
+### Prerequisites
+
+The Dynamic Map API requires a separate server for rendering. Start the Dynamic Map server:
+
+```bash
+# Start the Dynamic Map API server
+node tests/tomtom-dynamic-map.js
+
+# The server will start on http://localhost:3000 by default
+# Configure with DYNAMIC_MAP_SERVER_URL environment variable if needed
+```
+
+### Key Features
+
+#### ✨ **Advanced Markers**
+- Custom colors and labels
+- Multiple marker support
+- Intelligent auto-positioning
+
+#### 🛣️ **Traffic-Aware Routes**
+- Real-time traffic visualization
+- Color-coded route segments (green = no traffic, red = heavy delays)
+- Route metadata display (distance, time, delays)
+
+#### 🧠 **Smart Auto-Calculation**
+- Automatic zoom and bounds calculation
+- Optimal image dimensions based on content
+- Geographic buffering with Turf.js
+
+#### 🌍 **Dual Environment Support**
+- Genesis maps (standard TomTom)
+- Orbis maps (internal TomTom APIs)
+
+### Usage Examples
+
+#### Simple Markers
+```typescript
+{
+  "markers": [
+    { "lat": 52.3740, "lon": 4.8897, "label": "Amsterdam", "color": "#ff0000" },
+    { "lat": 48.8566, "lon": 2.3522, "label": "Paris", "color": "#0066cc" }
+  ],
+  "showLabels": true
+}
+```
+
+#### Route Planning Mode
+```typescript
+{
+  "isRoute": true,
+  "origin": { "lat": 52.3740, "lon": 4.8897 },
+  "destination": { "lat": 48.8566, "lon": 2.3522 },
+  "waypoints": [{ "lat": 50.8503, "lon": 4.3517 }],  // Brussels
+  "use_orbis": true,
+  "showLabels": true
+}
+```
+
+#### Advanced Route with Traffic Data
+```typescript
+{
+  "routes": [
+    {
+      "points": [
+        { "lat": 52.3740, "lon": 4.8897 },
+        { "lat": 52.3680, "lon": 4.9000 }
+      ],
+      "name": "Amsterdam Route"
+    }
+  ],
+  "routeData": {
+    "lengthInMeters": 15000,
+    "travelTimeInSeconds": 1200,
+    "trafficDelayInSeconds": 300
+  },
+  "width": 1024,
+  "height": 768,
+  "routeInfoDetail": "detailed"
+}
+```
+
+### Configuration Options
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `markers` | Array | Custom markers with colors and labels |
+| `routes` | Array | Route lines with traffic visualization |
+| `isRoute` | Boolean | Route planning mode with origin/destination |
+| `use_orbis` | Boolean | Use Orbis maps instead of Genesis |
+| `showLabels` | Boolean | Display text labels on markers/routes |
+| `width`, `height` | Number | Image dimensions (auto-calculated if omitted) |
+| `routeInfoDetail` | Enum | Level of route information: "basic", "compact", "detailed", "distance-time" |
+
+### Server Configuration
+
+Set custom server URL:
+```bash
+export DYNAMIC_MAP_SERVER_URL=http://your-server:8080
+```
+
+### Technical Architecture
+
+The Dynamic Map API uses:
+- **MapLibre GL Native** for server-side rendering
+- **Turf.js** for geographic calculations
+- **Canvas** for PNG image generation
+- **Node.js Express** server for HTTP API
+
+### Comparison: Static vs Dynamic Maps
+
+| Feature | `tomtom-static-map` | `tomtom-dynamic-map` |
+|---------|-------------------|-------------------|
+| Custom Markers | ❌ Limited | ✅ Full customization |
+| Route Visualization | ❌ No support | ✅ Traffic-aware coloring |
+| Auto-sizing | ❌ Manual only | ✅ Intelligent calculation |
+| Orbis Support | ❌ Genesis only | ✅ Both environments |
+| Setup Required | ✅ API key only | ⚠️ Additional server needed |
 
 ---
 ## Contributing & Local Development

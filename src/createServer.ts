@@ -27,12 +27,21 @@ import { createTrafficOrbisTools } from "./tools/trafficOrbisTools";
 
 /**
  * Factory function that creates and configures a TomTom MCP server instance
+ * 
+ * Maps Environment Configuration:
+ * - MAPS=orbis (or MAPS=ORBIS/Orbis) → Uses Orbis maps APIs (/maps/orbis/*)
+ * - Default (no MAPS var or other values) → Uses Genesis maps APIs (standard TomTom APIs)
+ * 
+ * Examples:
+ * - MAPS=orbis npm start → Orbis maps
+ * - npm start → Genesis maps (default)
  */
 export function createServer(): McpServer {
-  const isOrbis = process.env.ENVIRONMENT === "orbis";
-  const serverName = isOrbis ? "TomTom Orbis MCP Server" : "TomTom MCP Server";
+  const mapsEnv = process.env.MAPS?.toLowerCase();
+  const isOrbis = mapsEnv === "orbis";
+  const serverName = isOrbis ? "TomTom Orbis MCP Server" : "TomTom Genesis MCP Server";
   
-  logger.info(`Initializing ${serverName}`);
+  logger.info(`Initializing ${serverName} (Maps: ${isOrbis ? 'Orbis' : 'Genesis'})`);
   validateServerApiKey();
   
   const server = new McpServer({
@@ -66,14 +75,14 @@ function validateServerApiKey(): void {
  */
 function registerTools(server: McpServer, isOrbis: boolean): void {
   if (isOrbis) {
-    logger.info("Registering Orbis tools");
+    logger.info("Registering Orbis maps tools");
     // Register Orbis tools
     createSearchOrbisTools(server);
     createRoutingOrbisTools(server);
     createTrafficOrbisTools(server);
   } else {
-    logger.info("Registering TomTom tools");
-    // Register TomTom tools
+    logger.info("Registering Genesis maps tools");
+    // Register Genesis (standard TomTom) tools
     createSearchTools(server);
     createRoutingTools(server);
     createTrafficTools(server);

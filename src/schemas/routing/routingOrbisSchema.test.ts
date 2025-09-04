@@ -53,9 +53,9 @@ describe("tomtomRoutingSchema", () => {
     const input = {
       origin: { lat: 1, lon: 2 },
       destination: { lat: 3, lon: 4 },
-      routeType: "fastest",
+      routeType: "fast",
       travelMode: "car",
-      traffic: true,
+      traffic: "live",
       avoid: ["tollRoads"],
       departAt: "2025-06-24T14:30:00Z",
     };
