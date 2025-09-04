@@ -277,7 +277,7 @@ describe("Dynamic Map Service", () => {
       expect(result.contentType).toBe('image/png');
     });
 
-    it("should normalize route data correctly", async () => {
+    it("should handle intelligent route calculation", async () => {
       // Mock TomTom style API response
       mockedAxios.get.mockResolvedValueOnce({
         status: 200,
@@ -288,22 +288,53 @@ describe("Dynamic Map Service", () => {
         }
       });
 
-      const options = {
-        routes: [
-          {
+      // Mock route service response with proper RouteResult structure
+      const mockRouteResponse = {
+        routes: [{
+          summary: {
+            lengthInMeters: 1000,
+            travelTimeInSeconds: 300,
+            trafficDelayInSeconds: 0,
+            departureTime: '2025-01-01T10:00:00Z',
+            arrivalTime: '2025-01-01T10:05:00Z'
+          },
+          legs: [{
             points: [
-              { lat: 52.3740, lon: 4.8897 },
-              [52.3680, 4.9000] as [number, number], // Array format
-              { coordinates: [52.3650, 4.8950] as [number, number] } // Coordinates object format
+              { latitude: 52.3740, longitude: 4.8897 },
+              { latitude: 52.3680, longitude: 4.9000 },
+              { latitude: 52.3650, longitude: 4.8950 }
             ]
-          }
-        ]
+          }]
+        }]
+      };
+
+      // Mock the routing service
+      const routingModule = await import('../routing/routingService');
+      vi.spyOn(routingModule, 'getRoute').mockResolvedValue(mockRouteResponse);
+
+      const options = {
+        origin: { lat: 52.3740, lon: 4.8897 },
+        destination: { lat: 52.3650, lon: 4.8950 },
+        routeType: 'fastest' as const,
+        travelMode: 'car' as const
       };
 
       const result = await renderDynamicMap(options);
 
       expect(result.contentType).toBe('image/png');
       expect(result.base64).toBeDefined();
+      expect(routingModule.getRoute).toHaveBeenCalledWith(
+        options.origin,
+        options.destination,
+        expect.objectContaining({
+          routeType: 'fastest',
+          travelMode: 'car',
+          traffic: false,
+          instructionsType: 'text',
+          sectionType: [],
+          computeTravelTimeFor: 'all'
+        })
+      );
     });
 
     it("should handle custom dimensions", async () => {

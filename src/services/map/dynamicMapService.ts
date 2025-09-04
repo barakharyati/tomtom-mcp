@@ -18,6 +18,8 @@ import axios from "axios";
 import { validateApiKey } from "../base/tomtomClient";
 import { logger } from "../../utils/logger";
 import { DynamicMapOptions, DynamicMapResponse } from "./dynamicMapTypes";
+import { getRoute, getMultiWaypointRoute } from "../routing/routingService";
+import { RouteOptions } from "../routing/types";
 import mbgl from '@maplibre/maplibre-gl-native';
 import { createCanvas } from 'canvas';
 import * as turf from '@turf/turf';
@@ -26,6 +28,50 @@ import * as turf from '@turf/turf';
  * Dynamic Map Service
  * Provides advanced map rendering capabilities using MapLibre GL Native, Turf.js, and Canvas
  */
+
+/**
+ * Format time in seconds to human-readable format
+ */
+function formatTime(seconds: number): string {
+  if (!seconds || seconds < 60) {
+    return `${Math.round(seconds || 0)}s`;
+  } else if (seconds < 3600) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.round(seconds % 60);
+    return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+  } else {
+    const hours = Math.floor(seconds / 3600);
+    const remainingMinutes = Math.floor((seconds % 3600) / 60);
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+  }
+}
+
+/**
+ * Format distance in meters to human-readable format
+ */
+function formatDistance(meters: number): string {
+  if (!meters || meters < 1000) {
+    return `${Math.round(meters || 0)}m`;
+  } else if (meters < 100000) {
+    return `${(meters / 1000).toFixed(1)}km`;
+  } else {
+    return `${Math.round(meters / 1000)}km`;
+  }
+}
+
+/**
+ * Get traffic color based on delay percentage
+ */
+function getTrafficColor(travelTime: number, trafficDelay: number): string {
+  if (!trafficDelay || trafficDelay <= 0) return '#22c55e'; // Green - no traffic
+  
+  const delayPercentage = (trafficDelay / travelTime) * 100;
+  
+  if (delayPercentage < 10) return '#84cc16'; // Light green - light traffic
+  if (delayPercentage < 25) return '#eab308'; // Yellow - moderate traffic
+  if (delayPercentage < 50) return '#f97316'; // Orange - heavy traffic
+  return '#ef4444'; // Red - severe delays
+}
 
 /**
  * Default options for dynamic map rendering
@@ -258,7 +304,7 @@ function calculateEnhancedBounds(markers: any[], routes: any[], mapWidth: number
  * Render a dynamic map using MapLibre GL Native (adapted from original renderMap function)
  */
 async function renderMapWithMapLibre(options: any): Promise<Buffer> {
-  const { bbox, width, height, markers, routes, isRoute, showLabels, routeLabel, use_orbis } = options;
+  const { bbox, width, height, markers, routes, routeData, isRoute, showLabels, routeLabel, use_orbis } = options;
   
   let bounds: any, center: any, zoom: number;
   
@@ -457,6 +503,29 @@ async function renderMapWithMapLibre(options: any): Promise<Buffer> {
             .map(coord => [coord!.lon, coord!.lat]);
           
           if (validCoords.length > 1) {
+            // Extract route metadata for this specific route
+            let currentRouteData: any = {};
+            if (routeData && Array.isArray(routeData) && routeData[routeIndex]) {
+              currentRouteData = routeData[routeIndex];
+            }
+            
+            const lengthInMeters = currentRouteData.lengthInMeters || 0;
+            const travelTimeInSeconds = currentRouteData.travelTimeInSeconds || 0;
+            const trafficDelayInSeconds = currentRouteData.trafficDelayInSeconds || 0;
+            const distance = currentRouteData.distance || formatDistance(lengthInMeters);
+            const travelTime = currentRouteData.travelTime || formatTime(travelTimeInSeconds);
+            const trafficDelay = currentRouteData.trafficDelay || formatTime(trafficDelayInSeconds);
+            const trafficColor = currentRouteData.trafficColor || getTrafficColor(travelTimeInSeconds, trafficDelayInSeconds);
+            
+            // Create route summary label
+            let routeSummary = currentRouteData.name || routeLabel || `Route ${routeIndex + 1}`;
+            if (distance && travelTime) {
+              routeSummary += ` (${distance}, ${travelTime})`;
+              if (trafficDelayInSeconds > 0) {
+                routeSummary += ` +${trafficDelay} delay`;
+              }
+            }
+            
             return {
               type: 'Feature',
               geometry: { 
@@ -465,8 +534,16 @@ async function renderMapWithMapLibre(options: any): Promise<Buffer> {
               },
               properties: { 
                 id: routeIndex,
-                label: routeLabel || `Route ${routeIndex + 1}`,
-                trafficColor: '#22c55e' // Default green
+                label: routeSummary,
+                routeName: currentRouteData.name || routeLabel || `Route ${routeIndex + 1}`,
+                distance: distance,
+                travelTime: travelTime,
+                trafficDelay: trafficDelay,
+                trafficColor: trafficColor,
+                hasTrafficData: trafficDelayInSeconds > 0,
+                lengthInMeters: lengthInMeters,
+                travelTimeInSeconds: travelTimeInSeconds,
+                trafficDelayInSeconds: trafficDelayInSeconds
               }
             };
           }
@@ -479,6 +556,56 @@ async function renderMapWithMapLibre(options: any): Promise<Buffer> {
           type: 'geojson', 
           data: { type: 'FeatureCollection', features: routeFeatures } 
         });
+        
+        // Create separate features for route labels positioned at start and end points
+        const routeLabelFeatures: any[] = [];
+        
+        routeFeatures.forEach((routeFeature: any, index: number) => {
+          const coords = routeFeature.geometry.coordinates;
+          if (coords && coords.length > 1) {
+            // Start point label
+            const startPoint = coords[0];
+            routeLabelFeatures.push({
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [startPoint[0], startPoint[1] + 0.0005] // Slight offset above
+              },
+              properties: {
+                label: `Start: ${routeFeature.properties.routeName}`,
+                summary: `${routeFeature.properties.distance}, ${routeFeature.properties.travelTime}`,
+                routeId: routeFeature.properties.id,
+                type: 'start'
+              }
+            });
+            
+            // End point label with route summary
+            const endPoint = coords[coords.length - 1];
+            routeLabelFeatures.push({
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [endPoint[0], endPoint[1] - 0.0005] // Slight offset below
+              },
+              properties: {
+                label: `End: ${routeFeature.properties.label}`,
+                summary: routeFeature.properties.hasTrafficData 
+                  ? `${routeFeature.properties.distance}, ${routeFeature.properties.travelTime} (+${routeFeature.properties.trafficDelay})`
+                  : `${routeFeature.properties.distance}, ${routeFeature.properties.travelTime}`,
+                routeId: routeFeature.properties.id,
+                type: 'end'
+              }
+            });
+          }
+        });
+        
+        // Add route label source
+        if (routeLabelFeatures.length > 0) {
+          map.addSource('route-labels', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: routeLabelFeatures }
+          });
+        }
         
         // Add route outline for better visibility
         map.addLayer({ 
@@ -503,6 +630,31 @@ async function renderMapWithMapLibre(options: any): Promise<Buffer> {
             'line-opacity': 1
           } 
         });
+        
+        // Add route summary labels if enabled
+        if (showLabels && routeLabelFeatures.length > 0) {
+          map.addLayer({
+            id: 'route-labels',
+            type: 'symbol',
+            source: 'route-labels',
+            layout: {
+              'text-field': ['get', 'summary'],
+              'text-font': ['Noto-Bold'],
+              'symbol-placement': 'point',
+              'text-anchor': 'center',
+              'text-size': 12,
+              'text-max-width': 15,
+              'text-allow-overlap': false,
+              'text-padding': 10,
+              'text-line-height': 1.0
+            },
+            paint: {
+              'text-color': '#1976d2',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 3
+            }
+          });
+        }
         
         logger.info(`✅ Added ${routeFeatures.length} enhanced routes to map`);
       }
@@ -613,12 +765,86 @@ export async function renderDynamicMap(options: DynamicMapOptions): Promise<Dyna
       });
     }
     
-    // Prepare routes array (adapted from original logic)
-    let routes: any[] = [];
-    if (finalOptions.routes && finalOptions.routes.length > 0) {
-      routes = finalOptions.routes;
-    } else if (finalOptions.route && finalOptions.route.length > 0) {
-      routes = [finalOptions.route];
+    // Calculate routes intelligently using TomTom routing service
+    let routes: Array<Array<{lat: number, lon: number}>> = [];
+    let routeData: Array<{
+      lengthInMeters: number;
+      travelTimeInSeconds: number;
+      trafficDelayInSeconds: number;
+      distance: string;
+      travelTime: string;
+      trafficDelay: string;
+      trafficColor: string;
+      hasTrafficData: boolean;
+      name: string;
+    }> = [];
+    
+    if (finalOptions.origin && finalOptions.destination) {
+      try {
+        const routeOptions: RouteOptions = {
+          routeType: finalOptions.routeType || 'fastest',
+          travelMode: finalOptions.travelMode || 'car',
+          avoid: finalOptions.avoid,
+          traffic: finalOptions.traffic || false,
+          instructionsType: 'text',
+          sectionType: [],
+          computeTravelTimeFor: 'all'
+        };
+
+        let routeResult;
+        if (finalOptions.waypoints && finalOptions.waypoints.length > 0) {
+          // Use multi-waypoint routing
+          const waypoints = [finalOptions.origin, ...finalOptions.waypoints, finalOptions.destination];
+          routeResult = await getMultiWaypointRoute(waypoints, routeOptions);
+        } else {
+          // Use simple routing
+          routeResult = await getRoute(finalOptions.origin, finalOptions.destination, routeOptions);
+        }
+
+        if (routeResult && routeResult.routes && routeResult.routes.length > 0) {
+          routes = routeResult.routes.map((route, index) => {
+            const coordinates: Array<{lat: number, lon: number}> = [];
+            route.legs?.forEach(leg => {
+              leg.points?.forEach(point => {
+                coordinates.push({
+                  lat: point.latitude,
+                  lon: point.longitude
+                });
+              });
+            });
+
+            // Extract route summary data
+            const lengthInMeters = route.summary?.lengthInMeters || 0;
+            const travelTimeInSeconds = route.summary?.travelTimeInSeconds || 0;
+            const trafficDelayInSeconds = route.summary?.trafficDelayInSeconds || 0;
+            
+            // Format the information
+            const distance = formatDistance(lengthInMeters);
+            const travelTime = formatTime(travelTimeInSeconds);
+            const trafficDelay = formatTime(trafficDelayInSeconds);
+            const trafficColor = getTrafficColor(travelTimeInSeconds, trafficDelayInSeconds);
+            
+            // Store route metadata
+            routeData.push({
+              lengthInMeters,
+              travelTimeInSeconds,
+              trafficDelayInSeconds,
+              distance,
+              travelTime,
+              trafficDelay,
+              trafficColor,
+              hasTrafficData: trafficDelayInSeconds > 0,
+              name: finalOptions.routeLabel || `Route ${index + 1}`
+            });
+
+            return coordinates;
+          });
+
+          logger.info(`Calculated ${routes.length} routes with total ${routes.reduce((sum, route) => sum + route.length, 0)} coordinates`);
+        }
+      } catch (routeError) {
+        logger.warn(`Failed to calculate route: ${routeError}. Proceeding without route visualization.`);
+      }
     }
     
     // Render the map using the adapted MapLibre implementation
@@ -628,6 +854,7 @@ export async function renderDynamicMap(options: DynamicMapOptions): Promise<Dyna
       height: finalOptions.height,
       markers,
       routes,
+      routeData,
       isRoute: finalOptions.isRoute || false,
       showLabels: finalOptions.showLabels || false,
       routeLabel: finalOptions.routeLabel,

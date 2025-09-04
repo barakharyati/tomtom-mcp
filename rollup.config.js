@@ -36,15 +36,20 @@ export default {
     }
   ],
   external: [
-    // list your external dependencies here, e.g.:
+    // MCP SDK
+    '@modelcontextprotocol/sdk',
+    // HTTP client
     'axios',
-    'express',
-    // Dynamic map dependencies (optional)
+    // Static imports for dynamic maps
     '@maplibre/maplibre-gl-native',
     'canvas',
     '@turf/turf',
-    // Node built-ins:
-    'fs', 'path', 'crypto', /* etc */
+    // Validation
+    'zod',
+    // Environment
+    'dotenv',
+    // Node built-ins
+    'fs', 'path', 'crypto', 'util', 'url', 'events', 'stream', 'buffer'
   ],
   plugins: [
     resolve({

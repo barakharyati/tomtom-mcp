@@ -38,22 +38,7 @@ export interface DynamicMapOptions {
     color?: string;
   }>;
 
-  routes?: Array<{
-    points: Array<{
-      lat: number;
-      lon: number;
-    } | [number, number] | { coordinates: [number, number] }>;
-    name?: string;
-    color?: string;
-  }>;
-
-  // Legacy single route
-  route?: Array<{
-    lat: number;
-    lon: number;
-  } | [number, number] | { coordinates: [number, number] }>;
-
-  // Route planning mode
+  // Route planning mode - intelligent route calculation
   isRoute?: boolean;
   origin?: {
     lat: number;
@@ -68,21 +53,16 @@ export interface DynamicMapOptions {
     lon: number;
   }>;
 
+  // Route calculation options
+  routeType?: "fastest" | "shortest" | "eco" | "thrilling";
+  travelMode?: "car" | "truck" | "bicycle" | "pedestrian";
+  avoid?: string[];
+  traffic?: boolean;
+
   // Display options
   showLabels?: boolean;
   routeLabel?: string;
   routeInfoDetail?: "basic" | "compact" | "detailed" | "distance-time";
-
-  // Route metadata
-  routeData?: {
-    lengthInMeters?: number;
-    travelTimeInSeconds?: number;
-    trafficDelayInSeconds?: number;
-  } | Array<{
-    lengthInMeters?: number;
-    travelTimeInSeconds?: number;
-    trafficDelayInSeconds?: number;
-  }>;
 
   // Environment
   use_orbis?: boolean;
