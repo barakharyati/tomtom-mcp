@@ -19,7 +19,8 @@ import { z } from "zod";
 // Coordinate schema for reuse
 const coordinateSchema = z.object({
   lat: z.number().describe("Latitude coordinate (-90 to +90). Use precise coordinates from geocoding for best results."),
-  lon: z.number().describe("Longitude coordinate (-180 to +180). Use precise coordinates from geocoding for best results.")
+  lon: z.number().describe("Longitude coordinate (-180 to +180). Use precise coordinates from geocoding for best results."),
+  label: z.string().optional().describe("Optional custom label for this location. If not provided, defaults will be used (e.g., 'Start', 'End', 'Waypoint 1')")
 });
 
 // Marker schema
@@ -132,20 +133,20 @@ export const tomtomDynamicMapSchema = {
   origin: coordinateSchema
     .optional()
     .describe(
-      "Origin point for route planning (required when isRoute=true). Will be marked as 'Start' with green color."
+      "Origin point for route planning (required when isRoute=true). Can include optional 'label' field. Default label: 'Start'."
     ),
 
   destination: coordinateSchema
     .optional()
     .describe(
-      "Destination point for route planning (required when isRoute=true). Will be marked as 'End' with red color."
+      "Destination point for route planning (required when isRoute=true). Can include optional 'label' field. Default label: 'End'."
     ),
 
   waypoints: z
     .array(coordinateSchema)
     .optional()
     .describe(
-      "Optional waypoints for route planning. Will be marked with orange color."
+      "Optional waypoints for route planning. Each can include optional 'label' field. Default labels: 'Waypoint 1', 'Waypoint 2', etc."
     ),
 
   // Display options

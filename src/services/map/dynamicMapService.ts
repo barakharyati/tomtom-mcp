@@ -458,7 +458,7 @@ async function renderMapWithMapLibre(options: any): Promise<Buffer> {
           }
         });
         
-        // Add labels if enabled
+        // Add marker labels if enabled - enhanced for better visibility
         if (showLabels) {
           map.addLayer({
             id: 'marker-labels',
@@ -466,17 +466,20 @@ async function renderMapWithMapLibre(options: any): Promise<Buffer> {
             source: 'markers',
             layout: {
               'text-field': ['get', 'label'],
-              'text-font': ['Noto-Regular'],
-              'text-offset': [0, 2.5],
+              'text-font': ['Noto-Bold'],
+              'text-offset': [0, 3.0],
               'text-anchor': 'top',
-              'text-size': 11,
-              'text-max-width': 8,
-              'text-allow-overlap': false
+              'text-size': 13,
+              'text-max-width': 12,
+              'text-allow-overlap': false,
+              'text-padding': 5,
+              'text-line-height': 1.1
             },
             paint: {
-              'text-color': '#2c3e50',
+              'text-color': '#1a365d',
               'text-halo-color': '#ffffff',
-              'text-halo-width': 3
+              'text-halo-width': 4,
+              'text-halo-blur': 1
             }
           });
         }
@@ -631,7 +634,7 @@ async function renderMapWithMapLibre(options: any): Promise<Buffer> {
           } 
         });
         
-        // Add route summary labels if enabled
+        // Add route summary labels if enabled - positioned to avoid marker label conflicts
         if (showLabels && routeLabelFeatures.length > 0) {
           map.addLayer({
             id: 'route-labels',
@@ -642,16 +645,18 @@ async function renderMapWithMapLibre(options: any): Promise<Buffer> {
               'text-font': ['Noto-Bold'],
               'symbol-placement': 'point',
               'text-anchor': 'center',
-              'text-size': 12,
-              'text-max-width': 15,
+              'text-size': 11,
+              'text-max-width': 18,
               'text-allow-overlap': false,
-              'text-padding': 10,
-              'text-line-height': 1.0
+              'text-padding': 15,
+              'text-line-height': 1.0,
+              'text-justify': 'center'
             },
             paint: {
               'text-color': '#1976d2',
               'text-halo-color': '#ffffff',
-              'text-halo-width': 3
+              'text-halo-width': 3,
+              'text-halo-blur': 1
             }
           });
         }
@@ -737,20 +742,27 @@ export async function renderDynamicMap(options: DynamicMapOptions): Promise<Dyna
         throw new Error('Invalid origin or destination coordinates');
       }
       
-      // Create markers for origin and destination (from original implementation)
-      markers = [
-        { lat: originCoords.lat, lon: originCoords.lon, label: 'Start', color: '#22c55e' }
-      ];
+      // Add route planning markers to existing markers (preserve user markers)
+      const originLabel = (finalOptions.origin as any)?.label || 'Start';
+      const destLabel = (finalOptions.destination as any)?.label || 'End';
       
-      // Add waypoints if provided
+      markers.push({ 
+        lat: originCoords.lat, 
+        lon: originCoords.lon, 
+        label: originLabel, 
+        color: '#22c55e' 
+      });
+      
+      // Add waypoints if provided with custom labels
       if (finalOptions.waypoints && finalOptions.waypoints.length > 0) {
         finalOptions.waypoints.forEach((wp, i) => {
           const wpCoords = extractCoordinates(wp, i, 'waypoint');
           if (wpCoords) {
+            const waypointLabel = (wp as any)?.label || `Waypoint ${i+1}`;
             markers.push({ 
               lat: wpCoords.lat, 
               lon: wpCoords.lon, 
-              label: `Waypoint ${i+1}`, 
+              label: waypointLabel, 
               color: '#f97316' 
             });
           }
@@ -760,7 +772,7 @@ export async function renderDynamicMap(options: DynamicMapOptions): Promise<Dyna
       markers.push({ 
         lat: destCoords.lat, 
         lon: destCoords.lon, 
-        label: 'End', 
+        label: destLabel, 
         color: '#ef4444' 
       });
     }
@@ -779,7 +791,66 @@ export async function renderDynamicMap(options: DynamicMapOptions): Promise<Dyna
       name: string;
     }> = [];
     
-    if (finalOptions.origin && finalOptions.destination) {
+    // Handle direct routes (when routes are provided directly)
+    if ((finalOptions as any).routes && (finalOptions as any).routes.length > 0 && !finalOptions.isRoute) {
+      routes = (finalOptions as any).routes.map((route: any, routeIndex: number) => {
+        let routePoints: any[] = [];
+        
+        if (Array.isArray(route)) {
+          routePoints = route;
+        } else if (route.points && Array.isArray(route.points)) {
+          routePoints = route.points;
+        }
+        
+        if (routePoints.length > 1) {
+          const validCoords = routePoints
+            .map((point, pointIndex) => extractCoordinates(point, `${routeIndex}-${pointIndex}`, 'route point'))
+            .filter(coord => coord !== null)
+            .map(coord => [coord!.lat, coord!.lon]);
+          
+          if (validCoords.length > 1) {
+            // Add start/end markers for routes if no specific markers provided for these points
+            const startCoord = validCoords[0];
+            const endCoord = validCoords[validCoords.length - 1];
+            
+            // Check if we already have markers at start/end points (within reasonable distance)
+            const hasStartMarker = markers.some(m => 
+              Math.abs(m.lat - startCoord[0]) < 0.001 && Math.abs(m.lon - startCoord[1]) < 0.001
+            );
+            const hasEndMarker = markers.some(m => 
+              Math.abs(m.lat - endCoord[0]) < 0.001 && Math.abs(m.lon - endCoord[1]) < 0.001
+            );
+            
+            // Add automatic start/end markers if not present
+            if (!hasStartMarker) {
+              markers.push({
+                lat: startCoord[0],
+                lon: startCoord[1],
+                label: route.name ? `${route.name} Start` : `Route ${routeIndex + 1} Start`,
+                color: '#22c55e'
+              });
+            }
+            
+            if (!hasEndMarker) {
+              markers.push({
+                lat: endCoord[0],
+                lon: endCoord[1],
+                label: route.name ? `${route.name} End` : `Route ${routeIndex + 1} End`,
+                color: '#ef4444'
+              });
+            }
+            
+            return validCoords.map(coord => ({ lat: coord[0], lon: coord[1] }));
+          }
+        }
+        return [];
+      }).filter((route: any) => route.length > 0);
+      
+      logger.info(`✅ Processed ${routes.length} direct routes with automatic start/end markers`);
+    }
+    
+    // Calculate routes using TomTom routing service (route planning mode)
+    else if (finalOptions.origin && finalOptions.destination) {
       try {
         const routeOptions: RouteOptions = {
           routeType: finalOptions.routeType || 'fastest',
