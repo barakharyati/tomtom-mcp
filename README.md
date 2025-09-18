@@ -148,12 +148,6 @@ We fetch a Map Style JSON (either Genesis or Orbis), then use MapLibre (server-s
 
 The server converts the rendered image to PNG and returns as Base64 string.
 
-Simple example of the response format sent to the frontend:
-
-```
-data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
-```
-
 References:
 - Genesis Map Styles v2: https://developer.tomtom.com/map-display-api/documentation/mapstyles/map-styles-v2
 - Orbis style fetch: https://developer.tomtom.com/assets-api/documentation/tomtom-orbis-maps/styles-assets/fetch-style
