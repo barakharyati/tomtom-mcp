@@ -112,12 +112,8 @@ These guides help you integrate the MCP server with your tools and environments:
 
 ### Orbis equivalents (optional backend)
 
-By default the MCP tools use the public/Genesis TomTom APIs listed above. The project also supports calling the internal "Orbis" backend for the same tool names. To enable Orbis for all tools set the environment variable `MAPS=ORBIS` 
+By default the MCP tools use the Genesis TomTom APIs listed above. We also support using the "Orbis" backend for the same tool names. To enable Orbis for all tools set the environment variable `MAPS=ORBIS` 
 
-When `MAPS=ORBIS` the following tool names will still be available unchanged, but their backend implementation will call the Orbis API endpoints below instead of the Genesis URLs.
-
-
-When `MAPS=ORBIS` the following tool names will still be available unchanged, but their backend implementation will call the Orbis API endpoints below instead of the Genesis URLs.
 
 | Tool | Description | Orbis API (documentation) |
 |------|-------------|---------------------------|
