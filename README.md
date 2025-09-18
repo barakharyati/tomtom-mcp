@@ -135,27 +135,11 @@ When `MAPS=ORBIS` the following tool names will still be available unchanged, bu
 | `tomtom-dynamic-map` | **Advanced map rendering with custom markers, routes, and traffic visualization** | https://developer.tomtom.com/assets-api/documentation/tomtom-orbis-maps/styles-assets/fetch-style |
 
 
-Important: Orbis tools are currently in Public Preview and require explicit enablement for customer accounts. To request access, contact TomTom Sales and reference the Public Preview program:
+Important: Orbis tools are currently in Public Preview and require explicit enablement for developer accounts. To request access, contact TomTom Sales:
 
 - Public Preview details: https://developer.tomtom.com/public-preview
 - Contact Sales to enable Orbis for your developer account
 
-
-## Dynamic Map API
-
-The `tomtom-dynamic-map` tool provides advanced server-side map rendering capabilities with features not available in the standard Static Image API.
-
-### Prerequisites
-
-The Dynamic Map API requires a separate server for rendering. Start the Dynamic Map server:
-
-```bash
-# Start the Dynamic Map API server
-node tests/tomtom-dynamic-map.js
-
-# The server will start on http://localhost:3000 by default
-# Configure with DYNAMIC_MAP_SERVER_URL environment variable if needed
-```
 
 ### Key Features
 
