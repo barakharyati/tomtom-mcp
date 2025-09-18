@@ -14,23 +14,26 @@
  * limitations under the License.
  */
 
-import { tomtomClient, validateApiKey, API_VERSION } from "../base/tomtomClient";
+import { tomtomClient, validateApiKey, ORBIS_API_VERSION } from "../base/tomtomClient";
 import { handleApiError } from "../../utils/errorHandler";
 import { logger } from "../../utils/logger";
 import {
   Coordinates,
   RouteResult,
-  RouteOptions,
+  RouteOptionsOrbis,
+  ReachableRangeOptionsOrbis,
+  ReachableRangeResult,
 } from "./types";
 
 /**
  * Helper function to build route parameters from options
  * Centralizes parameter mapping logic to avoid duplication
  */
-function buildRouteParams(options?: RouteOptions): Record<string, any> {
+function buildRouteParams(options?: RouteOptionsOrbis): Record<string, any> {
   const params: Record<string, any> = {
+    apiVersion: ORBIS_API_VERSION.ROUTING,
     computeTravelTimeFor: options?.computeTravelTimeFor || "all",
-    routeType: options?.routeType || "fastest",
+    routeType: options?.routeType || "fast", // Changed from "fastest" to "fast" for Orbis
   };
 
   if (!options) return params;
@@ -157,7 +160,7 @@ function buildRouteParams(options?: RouteOptions): Record<string, any> {
 export async function getRoute(
   origin: Coordinates,
   destination: Coordinates,
-  options?: RouteOptions
+  options?: RouteOptionsOrbis
 ): Promise<RouteResult> {
   try {
     validateApiKey();
@@ -187,7 +190,7 @@ export async function getRoute(
  */
 export async function getMultiWaypointRoute(
   waypoints: Coordinates[],
-  options?: RouteOptions
+  options?: RouteOptionsOrbis
 ): Promise<RouteResult> {
   try {
     validateApiKey();
@@ -208,6 +211,131 @@ export async function getMultiWaypointRoute(
       `/maps/orbis/routing/calculateRoute/${coordinates}/json`,
       { params }
     );
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+}
+
+/**
+ * Helper function to build reachable range parameters from options
+ * Centralizes parameter mapping logic to avoid duplication
+ */
+function buildReachableRangeParams(options: ReachableRangeOptionsOrbis): Record<string, any> {
+  const params: Record<string, any> = {
+    apiVersion: ORBIS_API_VERSION.ROUTING,
+  };
+
+  // Budget parameters (one required)
+  if (options.timeBudgetInSec !== undefined) params.timeBudgetInSec = options.timeBudgetInSec;
+  if (options.distanceBudgetInMeters !== undefined)
+    params.distanceBudgetInMeters = options.distanceBudgetInMeters;
+  if (options.energyBudgetInkWh !== undefined) params.energyBudgetInkWh = options.energyBudgetInkWh;
+  if (options.fuelBudgetInLiters !== undefined)
+    params.fuelBudgetInLiters = options.fuelBudgetInLiters;
+
+  // Basic routing options
+  if (options.routeType) params.routeType = options.routeType;
+  if (options.travelMode) params.travelMode = options.travelMode;
+  if (options.traffic) params.traffic = options.traffic;
+  if (options.avoid) params.avoid = options.avoid;
+  if (options.departAt) params.departAt = options.departAt;
+
+  // Vehicle specifications
+  if (options.vehicleMaxSpeed) params.vehicleMaxSpeed = options.vehicleMaxSpeed;
+  if (options.vehicleWeight) params.vehicleWeight = options.vehicleWeight;
+
+  // Vehicle engine parameters
+  if (options.vehicleEngineType) params.vehicleEngineType = options.vehicleEngineType;
+
+  // Electric vehicle options
+  if (options.constantSpeedConsumptionInkWhPerHundredkm) {
+    params.constantSpeedConsumptionInkWhPerHundredkm =
+      options.constantSpeedConsumptionInkWhPerHundredkm;
+  }
+  if (options.currentChargeInkWh !== undefined)
+    params.currentChargeInkWh = options.currentChargeInkWh;
+  if (options.maxChargeInkWh !== undefined) params.maxChargeInkWh = options.maxChargeInkWh;
+  if (options.auxiliaryPowerInkW !== undefined)
+    params.auxiliaryPowerInkW = options.auxiliaryPowerInkW;
+
+  // Combustion vehicle options
+  if (options.constantSpeedConsumptionInLitersPerHundredkm) {
+    params.constantSpeedConsumptionInLitersPerHundredkm =
+      options.constantSpeedConsumptionInLitersPerHundredkm;
+  }
+  if (options.currentFuelInLiters !== undefined)
+    params.currentFuelInLiters = options.currentFuelInLiters;
+  if (options.auxiliaryPowerInLitersPerHour !== undefined) {
+    params.auxiliaryPowerInLitersPerHour = options.auxiliaryPowerInLitersPerHour;
+  }
+  if (options.fuelEnergyDensityInMJoulesPerLiter !== undefined) {
+    params.fuelEnergyDensityInMJoulesPerLiter = options.fuelEnergyDensityInMJoulesPerLiter;
+  }
+
+  // Efficiency parameters
+  if (options.accelerationEfficiency !== undefined) {
+    params.accelerationEfficiency = options.accelerationEfficiency;
+  }
+  if (options.decelerationEfficiency !== undefined) {
+    params.decelerationEfficiency = options.decelerationEfficiency;
+  }
+  if (options.uphillEfficiency !== undefined) params.uphillEfficiency = options.uphillEfficiency;
+  if (options.downhillEfficiency !== undefined)
+    params.downhillEfficiency = options.downhillEfficiency;
+  if (options.consumptionInkWhPerkmAltitudeGain !== undefined) {
+    params.consumptionInkWhPerkmAltitudeGain = options.consumptionInkWhPerkmAltitudeGain;
+  }
+  if (options.recuperationInkWhPerkmAltitudeLoss !== undefined) {
+    params.recuperationInkWhPerkmAltitudeLoss = options.recuperationInkWhPerkmAltitudeLoss;
+  }
+
+  // Other options
+  if (options.report !== undefined) params.report = options.report;
+  if (options.hilliness) params.hilliness = options.hilliness;
+  if (options.windingness) params.windingness = options.windingness;
+
+  return params;
+}
+
+/**
+ * Calculate reachable range from a starting point with various options
+ * @param origin Starting point coordinates
+ * @param options Various routing and budget options
+ * @returns Detailed reachable range information
+ */
+export async function getReachableRange(
+  origin: Coordinates,
+  options: ReachableRangeOptionsOrbis
+): Promise<ReachableRangeResult> {
+  try {
+    validateApiKey();
+
+    // Validate that at least one budget parameter is provided
+    if (
+      options.timeBudgetInSec === undefined &&
+      options.distanceBudgetInMeters === undefined &&
+      options.energyBudgetInkWh === undefined &&
+      options.fuelBudgetInLiters === undefined
+    ) {
+      throw new Error(
+        "At least one budget parameter (time, distance, energy, or fuel) must be provided"
+      );
+    }
+
+    logger.debug(`Calculating reachable range from (${origin.lat}, ${origin.lon})`);
+
+    // Format origin coordinates for URL path
+    const originCoords = `${origin.lat},${origin.lon}`;
+
+    const params = buildReachableRangeParams(options);
+
+    // Use the correct URL structure for Orbis reachable range endpoint
+    const response = await tomtomClient.get(
+      `/maps/orbis/routing/calculateReachableRange/${originCoords}/json`,
+      { params }
+    );
+
     return response.data;
   } catch (error) {
     throw handleApiError(error);

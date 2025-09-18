@@ -14,33 +14,18 @@
  * limitations under the License.
  */
 
-// tools/routingTools.ts
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { schemas } from "../schemas/indexOrbis";
-import {
-  createRoutingHandler,
-  createWaypointRoutingHandler,
-  createReachableRangeHandler,
-} from "../handlers/routingOrbisHandler";
+import { createDynamicMapHandler } from "../handlers/dynamicMapHandler";
 
 /**
- * Creates and registers routing-related tools
+ * Creates and registers mapping-related tools for Orbis
  */
-export function createRoutingOrbisTools(server: McpServer): void {
-  // Basic routing tool
-  server.tool("tomtom-routing", schemas.tomtomRoutingSchema, createRoutingHandler());
-
-  // Multi-waypoint routing tool
-  server.tool(
-    "tomtom-waypoint-routing",
-    schemas.tomtomWaypointRoutingSchema,
-    createWaypointRoutingHandler()
-  );
-
-  // Reachable range tool
-  server.tool(
-    "tomtom-reachable-range",
-    schemas.tomtomReachableRangeSchema,
-    createReachableRangeHandler()
+export function createMapOrbisTools(server: McpServer): void {
+  // Orbis only supports dynamic maps. Do NOT register the static-map tool for Orbis.
+  // Dynamic map: register the handler/schema but ensure use_orbis=true for all Orbis calls
+  const dynamicHandler = createDynamicMapHandler();
+  server.tool("tomtom-dynamic-map", schemas.tomtomDynamicMapSchema, async (params: any) =>
+    dynamicHandler({ ...params, use_orbis: true })
   );
 }

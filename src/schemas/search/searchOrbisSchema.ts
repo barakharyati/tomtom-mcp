@@ -15,7 +15,12 @@
  */
 
 import { z } from "zod";
-import { baseSearchParams, locationBiasParams, boundingBoxParams, poiFilterParams } from "./commonOrbis";
+import {
+  baseSearchParams,
+  locationBiasParams,
+  boundingBoxParams,
+  poiFilterParams,
+} from "./commonOrbis";
 
 export const tomtomFuzzySearchSchema = {
   query: z
@@ -47,7 +52,12 @@ export const tomtomFuzzySearchSchema = {
   relatedPois: z.string().optional().describe("Include related points of interest"),
   ext: z.string().optional().describe("Extended parameters for the search"),
   connectors: z.boolean().optional().describe("Include connector information for EV stations"),
-  categorySet: z.string().optional().describe("Filter by POI category IDs. Examples: '7315' (restaurants), '7315025,7315017' (Italian or French restaurants), '9663' (EV charging). See POI Categories endpoint for full list."),
+  categorySet: z
+    .string()
+    .optional()
+    .describe(
+      "Filter by POI category IDs. Examples: '7315' (restaurants), '7315025,7315017' (Italian or French restaurants), '9663' (EV charging). See POI Categories endpoint for full list."
+    ),
 };
 
 export const tomtomPOISearchSchema = {
@@ -163,7 +173,9 @@ export const tomtomReverseGeocodeSearchSchema = {
   returnRoadClass: z
     .string()
     .optional()
-    .describe("Enable return of roadClass array for street-level results. Value: 'Functional' (road classification based on network importance)"),
+    .describe(
+      "Enable return of roadClass array for street-level results. Value: 'Functional' (road classification based on network importance)"
+    ),
   entityType: z
     .string()
     .optional()
@@ -177,5 +189,7 @@ export const tomtomReverseGeocodeSearchSchema = {
   filter: z
     .string()
     .optional()
-    .describe("Exclude address-carrying elements for closest match. Value: 'BackRoads' (excludes unofficial roads, paths, tracks for more accurate addressing)"),
+    .describe(
+      "Exclude address-carrying elements for closest match. Value: 'BackRoads' (excludes unofficial roads, paths, tracks for more accurate addressing)"
+    ),
 };

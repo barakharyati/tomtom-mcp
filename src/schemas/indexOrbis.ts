@@ -24,8 +24,10 @@ import {
 import {
   tomtomRoutingSchema,
   tomtomWaypointRoutingSchema,
+  tomtomReachableRangeSchema,
 } from "./routing/routingOrbisSchema";
 import { tomtomMapSchema } from "./map/mapSchema";
+import { tomtomDynamicMapSchema } from "./map/dynamicMapSchema";
 import { tomtomTrafficSchema } from "./traffic/trafficOrbisSchema";
 
 export const schemas = {
@@ -36,6 +38,8 @@ export const schemas = {
   tomtomReverseGeocodeSearchSchema,
   tomtomRoutingSchema,
   tomtomWaypointRoutingSchema,
+  tomtomReachableRangeSchema,
   tomtomMapSchema,
+  tomtomDynamicMapSchema,
   tomtomTrafficSchema,
 };

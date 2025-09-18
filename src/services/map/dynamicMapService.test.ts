@@ -1,3 +1,4 @@
+/* global setTimeout */
 /*
  * Copyright (C) 2025 TomTom NV
  *
@@ -23,7 +24,7 @@ vi.mock("axios", () => {
     default: {
       get: vi.fn(),
       post: vi.fn(),
-    }
+    },
   };
 });
 
@@ -45,7 +46,7 @@ vi.mock("@maplibre/maplibre-gl-native", () => {
         const mockBuffer = new Uint8Array(options.width * options.height * 4); // RGBA
         // Fill with some mock data
         for (let i = 0; i < mockBuffer.length; i += 4) {
-          mockBuffer[i] = 255;     // R
+          mockBuffer[i] = 255; // R
           mockBuffer[i + 1] = 255; // G
           mockBuffer[i + 2] = 255; // B
           mockBuffer[i + 3] = 255; // A
@@ -60,23 +61,23 @@ vi.mock("@maplibre/maplibre-gl-native", () => {
     setPaintProperty: vi.fn(),
     fitBounds: vi.fn(),
     on: vi.fn((event, callback) => {
-      if (event === 'style.load') {
+      if (event === "style.load") {
         // Immediately call the callback to simulate style loaded
         setTimeout(callback, 0);
       }
     }),
     once: vi.fn((event, callback) => {
-      if (event === 'style.load') {
+      if (event === "style.load") {
         // Immediately call the callback to simulate style loaded
         setTimeout(callback, 0);
       }
     }),
   };
-  
+
   return {
     default: {
       Map: vi.fn(() => mockMap),
-    }
+    },
   };
 });
 
@@ -91,11 +92,11 @@ vi.mock("canvas", () => ({
       createImageData: vi.fn((w, h) => ({
         data: new Uint8ClampedArray(w * h * 4),
         width: w,
-        height: h
+        height: h,
       })),
       putImageData: vi.fn(),
     })),
-    toBuffer: vi.fn((format) => Buffer.from('fake-image-data')),
+    toBuffer: vi.fn((format) => Buffer.from("fake-image-data")),
     width,
     height,
   })),
@@ -105,26 +106,39 @@ vi.mock("canvas", () => ({
 vi.mock("@turf/turf", () => ({
   buffer: vi.fn(() => ({
     geometry: {
-      coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
-    }
+      coordinates: [
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+        ],
+      ],
+    },
   })),
   bbox: vi.fn(() => [0, 0, 1, 1]),
   point: vi.fn((coords) => ({
-    type: 'Feature',
+    type: "Feature",
     geometry: {
-      type: 'Point',
-      coordinates: coords
-    }
+      type: "Point",
+      coordinates: coords,
+    },
   })),
   featureCollection: vi.fn((features) => ({
-    type: 'FeatureCollection',
-    features: features || []
+    type: "FeatureCollection",
+    features: features || [],
   })),
 }));
 
-// Mock the validation function
+// Mock the validation function in tomtomClient
 vi.mock("../base/tomtomClient", () => ({
   validateApiKey: vi.fn(),
+}));
+
+// Mock the generated VERSION module
+vi.mock("../../version", () => ({
+  VERSION: "1.1.0",
 }));
 
 // Mock logger
@@ -156,30 +170,29 @@ describe("Dynamic Map Service", () => {
         data: {
           version: 8,
           sources: {},
-          layers: []
-        }
+          layers: [],
+        },
       });
 
       const options = {
-        markers: [
-          { lat: 52.3740, lon: 4.8897, label: "Amsterdam", color: "#ff0000" }
-        ],
+        markers: [{ lat: 52.374, lon: 4.8897, label: "Amsterdam", color: "#ff0000" }],
         width: 800,
-        height: 600
+        height: 600,
       };
 
       const result = await renderDynamicMap(options);
 
       expect(result).toEqual({
-        base64: Buffer.from('fake-image-data').toString('base64'),
-        contentType: 'image/png',
+        base64: Buffer.from("fake-image-data").toString("base64"),
+        contentType: "image/png",
         width: 800,
-        height: 600
+        height: 600,
       });
 
-      // Should call TomTom style API
+      // Should call TomTom style API (may include options object as second arg)
       expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('api.tomtom.com/style')
+        expect.stringContaining("api.tomtom.com/style"),
+        expect.any(Object)
       );
     });
 
@@ -190,26 +203,27 @@ describe("Dynamic Map Service", () => {
         data: {
           version: 8,
           sources: {},
-          layers: []
-        }
+          layers: [],
+        },
       });
 
       const options = {
         isRoute: true,
-        origin: { lat: 52.3740, lon: 4.8897 },
+        origin: { lat: 52.374, lon: 4.8897 },
         destination: { lat: 48.8566, lon: 2.3522 },
         waypoints: [{ lat: 50.8503, lon: 4.3517 }],
-        use_orbis: true
+        use_orbis: true,
       };
 
       const result = await renderDynamicMap(options);
 
-      expect(result.contentType).toBe('image/png');
+      expect(result.contentType).toBe("image/png");
       expect(result.base64).toBeDefined();
-      
-      // Should use Orbis style API when use_orbis is true
+
+      // Should use Orbis style API when use_orbis is true (may include options object)
       expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('api.tomtom.com/maps/orbis')
+        expect.stringContaining("api.tomtom.com/maps/orbis"),
+        expect.any(Object)
       );
     });
 
@@ -217,12 +231,10 @@ describe("Dynamic Map Service", () => {
       mockedAxios.get.mockRejectedValue(new Error("Connection refused"));
 
       const options = {
-        markers: [{ lat: 52.3740, lon: 4.8897 }]
+        markers: [{ lat: 52.374, lon: 4.8897 }],
       };
 
-      await expect(renderDynamicMap(options)).rejects.toThrow(
-        "Connection refused"
-      );
+      await expect(renderDynamicMap(options)).rejects.toThrow("Connection refused");
     });
 
     it("should throw error for route mode without destination", async () => {
@@ -230,7 +242,7 @@ describe("Dynamic Map Service", () => {
 
       const options = {
         isRoute: true,
-        origin: { lat: 52.3740, lon: 4.8897 }
+        origin: { lat: 52.374, lon: 4.8897 },
         // Missing destination
       };
 
@@ -243,12 +255,12 @@ describe("Dynamic Map Service", () => {
       mockedAxios.get.mockRejectedValue({
         response: {
           status: 401,
-          data: "Unauthorized: Invalid API key"
-        }
+          data: "Unauthorized: Invalid API key",
+        },
       });
 
       const options = {
-        markers: [{ lat: 52.3740, lon: 4.8897 }]
+        markers: [{ lat: 52.374, lon: 4.8897 }],
       };
 
       await expect(renderDynamicMap(options)).rejects.toThrow();
@@ -261,20 +273,20 @@ describe("Dynamic Map Service", () => {
         data: {
           version: 8,
           sources: {},
-          layers: []
-        }
+          layers: [],
+        },
       });
 
       const options = {
-        markers: [{ lat: 52.3740, lon: 4.8897 }]
+        markers: [{ lat: 52.374, lon: 4.8897 }],
         // No width, height, etc. - should use defaults
       };
 
       const result = await renderDynamicMap(options);
 
-      expect(result.width).toBe(800);  // Default
+      expect(result.width).toBe(800); // Default
       expect(result.height).toBe(600); // Default
-      expect(result.contentType).toBe('image/png');
+      expect(result.contentType).toBe("image/png");
     });
 
     it("should handle intelligent route calculation", async () => {
@@ -284,55 +296,59 @@ describe("Dynamic Map Service", () => {
         data: {
           version: 8,
           sources: {},
-          layers: []
-        }
+          layers: [],
+        },
       });
 
       // Mock route service response with proper RouteResult structure
       const mockRouteResponse = {
-        routes: [{
-          summary: {
-            lengthInMeters: 1000,
-            travelTimeInSeconds: 300,
-            trafficDelayInSeconds: 0,
-            departureTime: '2025-01-01T10:00:00Z',
-            arrivalTime: '2025-01-01T10:05:00Z'
+        routes: [
+          {
+            summary: {
+              lengthInMeters: 1000,
+              travelTimeInSeconds: 300,
+              trafficDelayInSeconds: 0,
+              departureTime: "2025-01-01T10:00:00Z",
+              arrivalTime: "2025-01-01T10:05:00Z",
+            },
+            legs: [
+              {
+                points: [
+                  { latitude: 52.374, longitude: 4.8897 },
+                  { latitude: 52.368, longitude: 4.9 },
+                  { latitude: 52.365, longitude: 4.895 },
+                ],
+              },
+            ],
           },
-          legs: [{
-            points: [
-              { latitude: 52.3740, longitude: 4.8897 },
-              { latitude: 52.3680, longitude: 4.9000 },
-              { latitude: 52.3650, longitude: 4.8950 }
-            ]
-          }]
-        }]
+        ],
       };
 
       // Mock the routing service
-      const routingModule = await import('../routing/routingService');
-      vi.spyOn(routingModule, 'getRoute').mockResolvedValue(mockRouteResponse);
+      const routingModule = await import("../routing/routingService");
+      vi.spyOn(routingModule, "getRoute").mockResolvedValue(mockRouteResponse);
 
       const options = {
-        origin: { lat: 52.3740, lon: 4.8897 },
-        destination: { lat: 52.3650, lon: 4.8950 },
-        routeType: 'fastest' as const,
-        travelMode: 'car' as const
+        origin: { lat: 52.374, lon: 4.8897 },
+        destination: { lat: 52.365, lon: 4.895 },
+        routeType: "fastest" as const,
+        travelMode: "car" as const,
       };
 
       const result = await renderDynamicMap(options);
 
-      expect(result.contentType).toBe('image/png');
+      expect(result.contentType).toBe("image/png");
       expect(result.base64).toBeDefined();
       expect(routingModule.getRoute).toHaveBeenCalledWith(
         options.origin,
         options.destination,
         expect.objectContaining({
-          routeType: 'fastest',
-          travelMode: 'car',
+          routeType: "fastest",
+          travelMode: "car",
           traffic: false,
-          instructionsType: 'text',
+          instructionsType: "text",
           sectionType: [],
-          computeTravelTimeFor: 'all'
+          computeTravelTimeFor: "all",
         })
       );
     });
@@ -344,21 +360,21 @@ describe("Dynamic Map Service", () => {
         data: {
           version: 8,
           sources: {},
-          layers: []
-        }
+          layers: [],
+        },
       });
 
       const options = {
-        markers: [{ lat: 52.3740, lon: 4.8897 }],
+        markers: [{ lat: 52.374, lon: 4.8897 }],
         width: 1024,
-        height: 768
+        height: 768,
       };
 
       const result = await renderDynamicMap(options);
 
       expect(result.width).toBe(1024);
       expect(result.height).toBe(768);
-      expect(result.contentType).toBe('image/png');
+      expect(result.contentType).toBe("image/png");
       expect(result.base64).toBeDefined();
     });
   });
@@ -366,29 +382,30 @@ describe("Dynamic Map Service", () => {
   describe("Environment configuration", () => {
     it("should work with custom API key from environment", async () => {
       process.env.TOMTOM_API_KEY = "custom-api-key";
-      
+
       // Mock TomTom style API response
       mockedAxios.get.mockResolvedValueOnce({
         status: 200,
         data: {
           version: 8,
           sources: {},
-          layers: []
-        }
+          layers: [],
+        },
       });
 
       const options = {
-        markers: [{ lat: 52.3740, lon: 4.8897 }]
+        markers: [{ lat: 52.374, lon: 4.8897 }],
       };
 
       const result = await renderDynamicMap(options);
 
-      expect(result.contentType).toBe('image/png');
+      expect(result.contentType).toBe("image/png");
       expect(result.base64).toBeDefined();
-      
-      // Should use the custom API key
+
+      // Should use the custom API key (may include options object)
       expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('key=custom-api-key')
+        expect.stringContaining("key=custom-api-key"),
+        expect.any(Object)
       );
     });
   });

@@ -1,3 +1,4 @@
+/* global setTimeout */
 /*
  * Copyright (C) 2025 TomTom NV
  *
@@ -23,6 +24,12 @@ import {
   reverseGeocode,
   geocodeAddress,
 } from "./searchService";
+
+import { beforeEach } from "vitest";
+
+beforeEach(async () => {
+  await new Promise((resolve) => setTimeout(resolve, 500));
+});
 
 // Real test using actual API calls
 describe("Search Service", () => {

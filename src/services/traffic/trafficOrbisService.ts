@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { tomtomClient, validateApiKey, API_VERSION } from "../base/tomtomClient";
+import { tomtomClient, validateApiKey, ORBIS_API_VERSION } from "../base/tomtomClient";
 import { handleApiError } from "../../utils/errorHandler";
 import { logger } from "../../utils/logger";
 import { TrafficIncidentsOptions, TrafficIncidentsResult, DEFAULT_OPTIONS } from "./types";
@@ -28,6 +28,7 @@ function buildTrafficIncidentsParams(
 ): Record<string, string | number> {
   const params: Record<string, string | number> = {
     bbox,
+    apiVersion: ORBIS_API_VERSION.TRAFFIC,
     fields: options.fields || DEFAULT_OPTIONS.fields,
     language: options.language || DEFAULT_OPTIONS.language,
     timeValidityFilter: options.timeValidityFilter || DEFAULT_OPTIONS.timeValidityFilter,

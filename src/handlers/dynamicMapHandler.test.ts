@@ -40,15 +40,15 @@ let createDynamicMapHandler: any;
 
 beforeEach(async () => {
   vi.clearAllMocks();
-  
+
   // Reset mocks
   const { renderDynamicMap } = await import("../services/map/dynamicMapService");
   const { logger } = await import("../utils/logger");
-  
+
   vi.mocked(renderDynamicMap).mockImplementation(mockRenderDynamicMap);
   vi.mocked(logger.info).mockImplementation(mockLogger.info);
   vi.mocked(logger.error).mockImplementation(mockLogger.error);
-  
+
   // Import handler after mocks
   const { createDynamicMapHandler: handler } = await import("./dynamicMapHandler");
   createDynamicMapHandler = handler;
@@ -60,14 +60,14 @@ describe("createDynamicMapHandler", () => {
       base64: "fake-image-data",
       contentType: "image/png",
       width: 800,
-      height: 600
+      height: 600,
     });
 
     const handler = createDynamicMapHandler();
     const params = {
-      markers: [{ lat: 52.3740, lon: 4.8897, label: "Amsterdam" }]
+      markers: [{ lat: 52.374, lon: 4.8897, label: "Amsterdam" }],
     };
-    
+
     const response = await handler(params);
 
     expect(mockRenderDynamicMap).toHaveBeenCalledWith(params);
@@ -83,9 +83,9 @@ describe("createDynamicMapHandler", () => {
 
     const handler = createDynamicMapHandler();
     const params = {
-      markers: [{ lat: 52.3740, lon: 4.8897 }]
+      markers: [{ lat: 52.374, lon: 4.8897 }],
     };
-    
+
     const response = await handler(params);
 
     expect(response.isError).toBe(true);
@@ -99,9 +99,9 @@ describe("createDynamicMapHandler", () => {
 
     const handler = createDynamicMapHandler();
     const params = {
-      markers: [{ lat: 52.3740, lon: 4.8897 }]
+      markers: [{ lat: 52.374, lon: 4.8897 }],
     };
-    
+
     const response = await handler(params);
 
     expect(response.isError).toBe(true);
@@ -116,10 +116,10 @@ describe("createDynamicMapHandler", () => {
     const handler = createDynamicMapHandler();
     const params = {
       isRoute: true,
-      origin: { lat: 52.3740, lon: 4.8897 },
-      destination: { lat: 48.8566, lon: 2.3522 }
+      origin: { lat: 52.374, lon: 4.8897 },
+      destination: { lat: 48.8566, lon: 2.3522 },
     };
-    
+
     const response = await handler(params);
 
     expect(response.isError).toBe(true);
@@ -133,19 +133,19 @@ describe("createDynamicMapHandler", () => {
       base64: "route-image-data",
       contentType: "image/png",
       width: 1024,
-      height: 768
+      height: 768,
     });
 
     const handler = createDynamicMapHandler();
     const params = {
       isRoute: true,
-      origin: { lat: 52.3740, lon: 4.8897 },
+      origin: { lat: 52.374, lon: 4.8897 },
       destination: { lat: 48.8566, lon: 2.3522 },
       waypoints: [{ lat: 50.8503, lon: 4.3517 }],
       showLabels: true,
-      use_orbis: true
+      use_orbis: true,
     };
-    
+
     const response = await handler(params);
 
     expect(mockRenderDynamicMap).toHaveBeenCalledWith(params);
@@ -161,12 +161,12 @@ describe("createDynamicMapHandler", () => {
       base64: "test-data",
       contentType: "image/png",
       width: 800,
-      height: 600
+      height: 600,
     });
 
     const handler = createDynamicMapHandler();
     const params = { markers: [{ lat: 0, lon: 0 }] };
-    
+
     await handler(params);
 
     expect(mockLogger.info).toHaveBeenCalledWith("🗺️ Processing dynamic map request");

@@ -49,7 +49,7 @@ export const tomtomTrafficSchema = {
     .describe(
       "Filter incidents by occurrence time. Values: 'present' (current incidents), 'future' (planned incidents). Multiple values comma-separated. Default: 'present'."
     ),
-  
+
   fields: z
     .string()
     .optional()

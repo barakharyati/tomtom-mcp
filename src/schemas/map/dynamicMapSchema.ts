@@ -18,9 +18,22 @@ import { z } from "zod";
 
 // Coordinate schema for reuse
 const coordinateSchema = z.object({
-  lat: z.number().describe("Latitude coordinate (-90 to +90). Use precise coordinates from geocoding for best results."),
-  lon: z.number().describe("Longitude coordinate (-180 to +180). Use precise coordinates from geocoding for best results."),
-  label: z.string().optional().describe("Optional custom label for this location. If not provided, defaults will be used (e.g., 'Start', 'End', 'Waypoint 1')")
+  lat: z
+    .number()
+    .describe(
+      "Latitude coordinate (-90 to +90). Use precise coordinates from geocoding for best results."
+    ),
+  lon: z
+    .number()
+    .describe(
+      "Longitude coordinate (-180 to +180). Use precise coordinates from geocoding for best results."
+    ),
+  label: z
+    .string()
+    .optional()
+    .describe(
+      "Optional custom label for this location. If not provided, defaults will be used (e.g., 'Start', 'End', 'Waypoint 1')"
+    ),
 });
 
 // Marker schema
@@ -28,7 +41,10 @@ const markerSchema = z.object({
   lat: z.number().describe("Marker latitude coordinate"),
   lon: z.number().describe("Marker longitude coordinate"),
   label: z.string().optional().describe("Optional label text for the marker"),
-  color: z.string().optional().describe("Marker color in hex format (e.g., '#ff0000' for red). Default: '#ff4444'")
+  color: z
+    .string()
+    .optional()
+    .describe("Marker color in hex format (e.g., '#ff0000' for red). Default: '#ff4444'"),
 });
 
 // Route point schema (flexible coordinate format)
@@ -36,22 +52,22 @@ const routePointSchema = z.union([
   coordinateSchema,
   z.array(z.number()).length(2).describe("Coordinate as [lat, lon] array"),
   z.object({
-    coordinates: z.array(z.number()).length(2).describe("Coordinates as {coordinates: [lat, lon]}")
-  })
+    coordinates: z.array(z.number()).length(2).describe("Coordinates as {coordinates: [lat, lon]}"),
+  }),
 ]);
 
 // Route schema
 const routeSchema = z.object({
   points: z.array(routePointSchema).describe("Array of route points in various coordinate formats"),
   name: z.string().optional().describe("Optional route name"),
-  color: z.string().optional().describe("Route color in hex format (e.g., '#0066cc')")
+  color: z.string().optional().describe("Route color in hex format (e.g., '#0066cc')"),
 });
 
 // Route data schema for traffic information
 const routeDataSchema = z.object({
   lengthInMeters: z.number().optional().describe("Route length in meters"),
   travelTimeInSeconds: z.number().optional().describe("Travel time in seconds"),
-  trafficDelayInSeconds: z.number().optional().describe("Traffic delay in seconds")
+  trafficDelayInSeconds: z.number().optional().describe("Traffic delay in seconds"),
 });
 
 /**
@@ -59,9 +75,11 @@ const routeDataSchema = z.object({
  */
 export const tomtomDynamicMapSchema = {
   // Map positioning - either center+zoom, bbox, or auto-calculated from content
-  center: coordinateSchema.optional().describe(
-    "Map center coordinates. Optional if bbox provided or if markers/routes are used for auto-calculation."
-  ),
+  center: coordinateSchema
+    .optional()
+    .describe(
+      "Map center coordinates. Optional if bbox provided or if markers/routes are used for auto-calculation."
+    ),
 
   bbox: z
     .array(z.number())
@@ -153,16 +171,9 @@ export const tomtomDynamicMapSchema = {
   showLabels: z
     .boolean()
     .optional()
-    .describe(
-      "Whether to show text labels on markers and routes. Default: false."
-    ),
+    .describe("Whether to show text labels on markers and routes. Default: false."),
 
-  routeLabel: z
-    .string()
-    .optional()
-    .describe(
-      "Custom label for routes. Used when showLabels=true."
-    ),
+  routeLabel: z.string().optional().describe("Custom label for routes. Used when showLabels=true."),
 
   routeInfoDetail: z
     .enum(["basic", "compact", "detailed", "distance-time"])
@@ -185,5 +196,5 @@ export const tomtomDynamicMapSchema = {
     .optional()
     .describe(
       "Use TomTom Orbis maps instead of default Genesis maps. Default: false (uses Genesis maps)."
-    )
+    ),
 };

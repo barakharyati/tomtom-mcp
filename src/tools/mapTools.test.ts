@@ -28,7 +28,7 @@ describe("createMapTools", () => {
   it("should register the tomtom-static-map tool with the correct schema and handler", () => {
     const mockServer = makeMockServer();
     createMapTools(mockServer as any);
-    
+
     expect(mockServer.tool).toHaveBeenCalledWith(
       "tomtom-static-map",
       expect.any(Object), // schema
@@ -39,7 +39,7 @@ describe("createMapTools", () => {
   it("should register the tomtom-dynamic-map tool with the correct schema and handler", () => {
     const mockServer = makeMockServer();
     createMapTools(mockServer as any);
-    
+
     expect(mockServer.tool).toHaveBeenCalledWith(
       "tomtom-dynamic-map",
       expect.any(Object), // schema
@@ -50,7 +50,7 @@ describe("createMapTools", () => {
   it("should register both map tools", () => {
     const mockServer = makeMockServer();
     createMapTools(mockServer as any);
-    
+
     expect(mockServer.tool).toHaveBeenCalledTimes(2);
   });
 });

@@ -25,26 +25,24 @@ describe("Dynamic Map Schema", () => {
   describe("Valid inputs", () => {
     it("should validate minimal marker request", () => {
       const validInput = {
-        markers: [
-          { lat: 52.3740, lon: 4.8897, label: "Amsterdam" }
-        ]
+        markers: [{ lat: 52.374, lon: 4.8897, label: "Amsterdam" }],
       };
-      
+
       expect(() => dynamicMapSchemaObject.parse(validInput)).not.toThrow();
     });
 
     it("should validate route planning request", () => {
       const validInput = {
         isRoute: true,
-        origin: { lat: 52.3740, lon: 4.8897 },
+        origin: { lat: 52.374, lon: 4.8897 },
         destination: { lat: 48.8566, lon: 2.3522 },
         waypoints: [
-          { lat: 50.8503, lon: 4.3517 } // Brussels
+          { lat: 50.8503, lon: 4.3517 }, // Brussels
         ],
         showLabels: true,
-        use_orbis: true
+        use_orbis: true,
       };
-      
+
       expect(() => dynamicMapSchemaObject.parse(validInput)).not.toThrow();
     });
 
@@ -53,47 +51,45 @@ describe("Dynamic Map Schema", () => {
         routes: [
           {
             points: [
-              { lat: 52.3740, lon: 4.8897 },
-              { lat: 52.3680, lon: 4.9000 }
+              { lat: 52.374, lon: 4.8897 },
+              { lat: 52.368, lon: 4.9 },
             ],
             name: "Amsterdam Route",
-            color: "#0066cc"
-          }
+            color: "#0066cc",
+          },
         ],
         routeData: {
           lengthInMeters: 15000,
           travelTimeInSeconds: 1200,
-          trafficDelayInSeconds: 300
+          trafficDelayInSeconds: 300,
         },
         width: 1024,
         height: 768,
         showLabels: true,
-        routeInfoDetail: "detailed"
+        routeInfoDetail: "detailed",
       };
-      
+
       expect(() => dynamicMapSchemaObject.parse(validInput)).not.toThrow();
     });
 
     it("should validate bbox positioning", () => {
       const validInput = {
-        bbox: [4.85, 52.35, 4.95, 52.40], // Amsterdam area
-        markers: [
-          { lat: 52.3740, lon: 4.8897 }
-        ]
+        bbox: [4.85, 52.35, 4.95, 52.4], // Amsterdam area
+        markers: [{ lat: 52.374, lon: 4.8897 }],
       };
-      
+
       expect(() => dynamicMapSchemaObject.parse(validInput)).not.toThrow();
     });
 
     it("should validate multiple coordinate formats", () => {
       const validInput = {
         route: [
-          { lat: 52.3740, lon: 4.8897 }, // Standard format
-          [52.3680, 4.9000], // Array format
-          { coordinates: [52.3650, 4.8950] } // Coordinates object format
-        ]
+          { lat: 52.374, lon: 4.8897 }, // Standard format
+          [52.368, 4.9], // Array format
+          { coordinates: [52.365, 4.895] }, // Coordinates object format
+        ],
       };
-      
+
       expect(() => dynamicMapSchemaObject.parse(validInput)).not.toThrow();
     });
   });
@@ -101,9 +97,9 @@ describe("Dynamic Map Schema", () => {
   describe("Optional parameters", () => {
     it("should accept all optional parameters as undefined", () => {
       const minimalInput = {
-        markers: [{ lat: 0, lon: 0 }]
+        markers: [{ lat: 0, lon: 0 }],
       };
-      
+
       const result = dynamicMapSchemaObject.parse(minimalInput);
       expect(result.center).toBeUndefined();
       expect(result.zoom).toBeUndefined();
@@ -115,13 +111,13 @@ describe("Dynamic Map Schema", () => {
 
     it("should validate all route info detail levels", () => {
       const levels = ["basic", "compact", "detailed", "distance-time"];
-      
-      levels.forEach(level => {
+
+      levels.forEach((level) => {
         const input = {
           markers: [{ lat: 0, lon: 0 }],
-          routeInfoDetail: level
+          routeInfoDetail: level,
         };
-        
+
         expect(() => dynamicMapSchemaObject.parse(input)).not.toThrow();
       });
     });
@@ -131,14 +127,14 @@ describe("Dynamic Map Schema", () => {
     it("should enforce zoom level bounds", () => {
       const invalidZoomLow = {
         markers: [{ lat: 0, lon: 0 }],
-        zoom: -1
+        zoom: -1,
       };
-      
+
       const invalidZoomHigh = {
         markers: [{ lat: 0, lon: 0 }],
-        zoom: 25
+        zoom: 25,
       };
-      
+
       expect(() => dynamicMapSchemaObject.parse(invalidZoomLow)).toThrow();
       expect(() => dynamicMapSchemaObject.parse(invalidZoomHigh)).toThrow();
     });
@@ -146,19 +142,19 @@ describe("Dynamic Map Schema", () => {
     it("should enforce dimension bounds", () => {
       const invalidDimensions = {
         markers: [{ lat: 0, lon: 0 }],
-        width: 50,  // Too small
-        height: 3000 // Too large
+        width: 50, // Too small
+        height: 3000, // Too large
       };
-      
+
       expect(() => dynamicMapSchemaObject.parse(invalidDimensions)).toThrow();
     });
 
     it("should validate bbox array length", () => {
       const invalidBbox = {
         markers: [{ lat: 0, lon: 0 }],
-        bbox: [4.85, 52.35, 4.95] // Missing north coordinate
+        bbox: [4.85, 52.35, 4.95], // Missing north coordinate
       };
-      
+
       expect(() => dynamicMapSchemaObject.parse(invalidBbox)).toThrow();
     });
   });
@@ -167,10 +163,10 @@ describe("Dynamic Map Schema", () => {
     it("should require origin and destination for route mode", () => {
       const invalidRoute = {
         isRoute: true,
-        origin: { lat: 52.3740, lon: 4.8897 }
+        origin: { lat: 52.374, lon: 4.8897 },
         // Missing destination
       };
-      
+
       // Schema validation passes, but service should validate this business rule
       expect(() => dynamicMapSchemaObject.parse(invalidRoute)).not.toThrow();
     });
@@ -182,36 +178,41 @@ describe("Dynamic Map Schema", () => {
         routes: [
           {
             points: [
-              { lat: 52.3740, lon: 4.8897 },
-              { lat: 52.3680, lon: 4.9000 }
+              { lat: 52.374, lon: 4.8897 },
+              { lat: 52.368, lon: 4.9 },
             ],
-            name: "Route 1"
+            name: "Route 1",
           },
           {
             points: [
               { lat: 48.8566, lon: 2.3522 },
-              { lat: 48.8606, lon: 2.3376 }
+              { lat: 48.8606, lon: 2.3376 },
             ],
-            name: "Route 2"
-          }
+            name: "Route 2",
+          },
         ],
         routeData: [
           { lengthInMeters: 1000, travelTimeInSeconds: 300 },
-          { lengthInMeters: 2000, travelTimeInSeconds: 600 }
-        ]
+          { lengthInMeters: 2000, travelTimeInSeconds: 600 },
+        ],
       };
-      
+
       expect(() => dynamicMapSchemaObject.parse(validInput)).not.toThrow();
     });
 
     it("should validate single route data for multiple routes", () => {
       const validInput = {
         routes: [
-          { points: [{ lat: 52.3740, lon: 4.8897 }, { lat: 52.3680, lon: 4.9000 }] }
+          {
+            points: [
+              { lat: 52.374, lon: 4.8897 },
+              { lat: 52.368, lon: 4.9 },
+            ],
+          },
         ],
-        routeData: { lengthInMeters: 1000, travelTimeInSeconds: 300 } // Single object for multiple routes
+        routeData: { lengthInMeters: 1000, travelTimeInSeconds: 300 }, // Single object for multiple routes
       };
-      
+
       expect(() => dynamicMapSchemaObject.parse(validInput)).not.toThrow();
     });
   });

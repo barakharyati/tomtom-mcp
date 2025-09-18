@@ -18,6 +18,7 @@ import { logger } from "../utils/logger";
 import {
   getRoute,
   getMultiWaypointRoute,
+  getReachableRange,
 } from "../services/routing/routingOrbisService";
 
 // Handler factory functions
@@ -63,6 +64,48 @@ export function createWaypointRoutingHandler() {
       };
     } catch (error: any) {
       logger.error(`❌ Multi-waypoint routing failed: ${error.message}`);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify({ error: error.message }) }],
+        isError: true,
+      };
+    }
+  };
+}
+
+export function createReachableRangeHandler() {
+  return async (params: any) => {
+    // Validate that at least one budget parameter is provided
+    if (
+      !params.timeBudgetInSec &&
+      !params.distanceBudgetInMeters &&
+      !params.energyBudgetInkWh &&
+      !params.fuelBudgetInLiters
+    ) {
+      return {
+        content: [
+          {
+            text: "Error: At least one budget parameter (time, distance, energy, or fuel) must be provided",
+            type: "text" as const,
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    logger.info(`🔄 Reachable range from (${params.origin.lat}, ${params.origin.lon})`);
+    try {
+      const result = await getReachableRange(params.origin, params);
+      logger.info(`✅ Reachable range calculated`);
+      return {
+        content: [
+          {
+            text: JSON.stringify(result, null, 2),
+            type: "text" as const,
+          },
+        ],
+      };
+    } catch (error: any) {
+      logger.error(`❌ Reachable range failed: ${error.message}`);
       return {
         content: [{ type: "text" as const, text: JSON.stringify({ error: error.message }) }],
         isError: true,

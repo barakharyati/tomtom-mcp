@@ -39,15 +39,14 @@ export const routingOptionsSchema = {
       "Route optimization: 'fast' (time-optimized), 'short' (distance-optimized), 'efficient' (fuel-efficient), 'thrilling' (scenic)."
     ),
 
-  travelMode: z
-    .enum(["car"])
-    .optional()
-    .describe("Transportation mode. Default: 'car'."),
+  travelMode: z.enum(["car"]).optional().describe("Transportation mode. Default: 'car'."),
 
   traffic: z
     .enum(["live", "historical"])
     .optional()
-    .describe("Traffic consideration: 'live' (real-time + historical), 'historical' (historical only)."),
+    .describe(
+      "Traffic consideration: 'live' (real-time + historical), 'historical' (historical only)."
+    ),
 
   avoid: z
     .array(z.string())
@@ -111,11 +110,13 @@ export const routingOptionsSchema = {
   minDeviationDistance: z
     .number()
     .optional()
-    .describe("Minimum distance (meters) alternatives must follow the reference route from origin."),
+    .describe(
+      "Minimum distance (meters) alternatives must follow the reference route from origin."
+    ),
 
   minDeviationTime: z
     .number()
-    .optional() 
+    .optional()
     .describe("Minimum time (seconds) alternatives must follow the reference route from origin."),
 
   supportingPointIndexOfOrigin: z
@@ -126,8 +127,9 @@ export const routingOptionsSchema = {
   reconstructionMode: z
     .enum(["track", "route", "update"])
     .optional()
-    .describe("How to reconstruct polyline: 'track' (flexible), 'route' (close match), 'update' (ignore restrictions)."),
-
+    .describe(
+      "How to reconstruct polyline: 'track' (flexible), 'route' (close match), 'update' (ignore restrictions)."
+    ),
 };
 
 // Vehicle specification schema for commercial routing
@@ -190,7 +192,9 @@ export const vehicleSchema = {
   vehicleHasElectricTollCollectionTransponder: z
     .enum(["all", "none"])
     .optional()
-    .describe("ETC transponder availability: 'all' (has transponder), 'none' (avoid ETC-only roads)."),
+    .describe(
+      "ETC transponder availability: 'all' (has transponder), 'none' (avoid ETC-only roads)."
+    ),
 
   arrivalSidePreference: z
     .enum(["anySide", "curbSide"])

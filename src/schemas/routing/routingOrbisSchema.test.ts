@@ -19,6 +19,7 @@ import { z } from "zod";
 import {
   tomtomRoutingSchema,
   tomtomWaypointRoutingSchema,
+  tomtomReachableRangeSchema,
 } from "./routingOrbisSchema";
 
 // Helper to create a Zod object from the schema object
@@ -85,5 +86,53 @@ describe("tomtomWaypointRoutingSchema", () => {
   it("should fail if a waypoint is not a coordinate", () => {
     const schema = makeSchema(tomtomWaypointRoutingSchema);
     expect(() => schema.parse({ waypoints: [{ lat: 1, lon: 2 }, "foo"] })).toThrow();
+  });
+});
+
+describe("tomtomReachableRangeSchema", () => {
+  it("should parse valid time-based reachable range", () => {
+    const input = {
+      origin: { lat: 52.374, lon: 4.8897 },
+      timeBudgetInSec: 1800,
+      travelMode: "car",
+    };
+    const schema = makeSchema(tomtomReachableRangeSchema);
+    expect(schema.parse(input)).toMatchObject(input);
+  });
+
+  it("should parse valid distance-based reachable range", () => {
+    const input = {
+      origin: { lat: 51.5074, lon: -0.1278 },
+      distanceBudgetInMeters: 10000,
+      travelMode: "car",
+    };
+    const schema = makeSchema(tomtomReachableRangeSchema);
+    expect(schema.parse(input)).toMatchObject(input);
+  });
+
+  it("should parse valid energy-based reachable range (EV)", () => {
+    const input = {
+      origin: { lat: 52.52, lon: 13.405 },
+      energyBudgetInkWh: 10,
+      travelMode: "car",
+      vehicleEngineType: "electric",
+    };
+    const schema = makeSchema(tomtomReachableRangeSchema);
+    expect(schema.parse(input)).toMatchObject(input);
+  });
+
+  it("should parse when no budget provided (handler enforces budget requirement)", () => {
+    const input = { origin: { lat: 52.374, lon: 4.8897 }, travelMode: "car" };
+    const schema = makeSchema(tomtomReachableRangeSchema);
+    // The schema itself does not enforce that at least one budget is present;
+    // that validation is performed in the handler at runtime. The schema should
+    // still parse a valid origin and optional travelMode.
+    expect(schema.parse(input)).toMatchObject(input);
+  });
+
+  it("should fail for invalid origin", () => {
+    const input = { origin: "invalid", timeBudgetInSec: 100 };
+    const schema = makeSchema(tomtomReachableRangeSchema);
+    expect(() => schema.parse(input)).toThrow();
   });
 });
