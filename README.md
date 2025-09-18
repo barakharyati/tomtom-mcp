@@ -146,7 +146,7 @@ We fetch a Map Style JSON (either Genesis or Orbis), then use MapLibre (server-s
 - add markers, routes, polygons and other layers defined by the style and request;
 - render all layers into an image using that style.
 
-The server converts the rendered image to PNG and returns it to the frontend as a Base64 data URL.
+The server converts the rendered image to PNG and returns as Base64 string.
 
 Simple example of the response format sent to the frontend:
 
