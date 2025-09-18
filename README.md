@@ -116,19 +116,23 @@ By default the MCP tools use the public/Genesis TomTom APIs listed above. The pr
 
 When `MAPS=ORBIS` the following tool names will still be available unchanged, but their backend implementation will call the Orbis API endpoints below instead of the Genesis URLs.
 
-| Tool | Orbis API (documentation) |
-|------|---------------------------|
-| `tomtom-geocode` | https://developer.tomtom.com/geocoding-api/documentation/tomtom-orbis-maps/geocode |
-| `tomtom-reverse-geocode` | https://developer.tomtom.com/reverse-geocoding-api/documentation/tomtom-orbis-maps/reverse-geocode |
-| `tomtom-fuzzy-search` | https://developer.tomtom.com/search-api/documentation/tomtom-orbis-maps/search-service/fuzzy-search |
-| `tomtom-poi-search` | https://developer.tomtom.com/search-api/documentation/tomtom-orbis-maps/search-service/points-of-interest-search |
-| `tomtom-nearby` | https://developer.tomtom.com/search-api/documentation/tomtom-orbis-maps/search-service/nearby-search |
-| `tomtom-routing` | https://developer.tomtom.com/routing-api/documentation/tomtom-orbis-maps/calculate-route |
-| `tomtom-waypoint-routing` | https://developer.tomtom.com/routing-api/documentation/tomtom-orbis-maps/calculate-route |
-| `tomtom-reachable-range` | https://developer.tomtom.com/routing-api/documentation/tomtom-orbis-maps/calculate-reachable-range |
-| `tomtom-traffic` | https://developer.tomtom.com/traffic-api/documentation/tomtom-orbis-maps/incident-details |
-| `tomtom-dynamic-map` | **Advanced map rendering with custom markers, routes, and traffic visualization** |
 
+When `MAPS=ORBIS` the following tool names will still be available unchanged, but their backend implementation will call the Orbis API endpoints below instead of the Genesis URLs.
+
+| Tool | Description | Orbis API (documentation) |
+|------|-------------|---------------------------|
+| `tomtom-geocode` | Forward geocoding: address → coordinates | https://developer.tomtom.com/geocoding-api/documentation/tomtom-orbis-maps/geocode |
+| `tomtom-reverse-geocode` | Reverse geocoding: coordinates → address | https://developer.tomtom.com/reverse-geocoding-api/documentation/tomtom-orbis-maps/reverse-geocode |
+| `tomtom-fuzzy-search` | General search with typo tolerance and suggestions | https://developer.tomtom.com/search-api/documentation/tomtom-orbis-maps/search-service/fuzzy-search |
+| `tomtom-poi-search` | Points of Interest (category-based) search | https://developer.tomtom.com/search-api/documentation/tomtom-orbis-maps/search-service/points-of-interest-search |
+| `tomtom-nearby` | Find POIs near a coordinate within a radius | https://developer.tomtom.com/search-api/documentation/tomtom-orbis-maps/search-service/nearby-search |
+| `tomtom-routing` | Calculate optimal route between two points | https://developer.tomtom.com/routing-api/documentation/tomtom-orbis-maps/calculate-route |
+| `tomtom-waypoint-routing` | Multi-stop / waypoint route planning | https://developer.tomtom.com/routing-api/documentation/tomtom-orbis-maps/calculate-route |
+| `tomtom-reachable-range` | Compute coverage area by time or distance budget | https://developer.tomtom.com/routing-api/documentation/tomtom-orbis-maps/calculate-reachable-range |
+| `tomtom-traffic` | Traffic incidents and related details | https://developer.tomtom.com/traffic-api/documentation/tomtom-orbis-maps/incident-details |
+| `map-styles` | Genesis Map Styles v2 (style JSONs) — referenced for style structure | https://developer.tomtom.com/map-display-api/documentation/mapstyles/map-styles-v2 |
+| `map-styles-orbis` | Orbis style fetch (style assets endpoint) — used by dynamic-map when Orbis is enabled | https://developer.tomtom.com/assets-api/documentation/tomtom-orbis-maps/styles-assets/fetch-style |
+| `tomtom-dynamic-map` | Server-side rendering: MapLibre renders markers, routes and polygons and returns an image | https://developer.tomtom.com/assets-api/documentation/tomtom-orbis-maps/styles-assets/fetch-style |
 
 
 Important: Orbis tools are currently in Public Preview and require explicit enablement for customer accounts. To request access, contact TomTom Sales and reference the Public Preview program:
