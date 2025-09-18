@@ -36,10 +36,23 @@ export interface DynamicMapOptions {
     lon: number;
     label?: string;
     color?: string;
+    priority?: "low" | "normal" | "high" | "critical";
   }>;
 
-  // Route planning mode - intelligent route calculation
-  isRoute?: boolean;
+  // Polygons - Phase 2: Multi-polygon support with circles and polygons
+  polygons?: Array<{
+    type?: "polygon" | "circle"; // Shape type
+    coordinates?: Array<[number, number]>; // [lon, lat] pairs for polygons
+    center?: { lat: number; lon: number }; // Center point for circles
+    radius?: number; // Radius in meters for circles
+    label?: string;
+    fillColor?: string;
+    strokeColor?: string;
+    strokeWidth?: number;
+    name?: string;
+  }>;
+
+  // Route planning mode - auto-detected when origin and destination provided
   origin?: {
     lat: number;
     lon: number;
@@ -63,9 +76,8 @@ export interface DynamicMapOptions {
   showLabels?: boolean;
   routeLabel?: string;
   routeInfoDetail?: "basic" | "compact" | "detailed" | "distance-time";
-
-  // Environment
   use_orbis?: boolean;
+
 }
 
 /**
