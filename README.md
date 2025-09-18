@@ -106,7 +106,7 @@ These guides help you integrate the MCP server with your tools and environments:
 | `tomtom-reachable-range` | Determine coverage areas by time/distance | https://developer.tomtom.com/routing-api/documentation/tomtom-maps/calculate-reachable-range |
 | `tomtom-traffic` | Real-time incidents data | https://developer.tomtom.com/traffic-api/documentation/traffic-incidents/traffic-incidents-service  |
 | `tomtom-static-map` | Generate custom map images | https://developer.tomtom.com/map-display-api/documentation/raster/static-image |
-| `tomtom-dynamic-map` | **Advanced map rendering with custom markers, routes, and traffic visualization** |
+| `tomtom-dynamic-map` | **Advanced map rendering with custom markers, routes, and traffic visualization** | https://developer.tomtom.com/map-display-api/documentation/mapstyles/map-styles-v2 |
 
 ---
 
@@ -132,7 +132,7 @@ When `MAPS=ORBIS` the following tool names will still be available unchanged, bu
 | `tomtom-traffic` | Traffic incidents and related details | https://developer.tomtom.com/traffic-api/documentation/tomtom-orbis-maps/incident-details |
 | `map-styles` | Genesis Map Styles v2 (style JSONs) — referenced for style structure | https://developer.tomtom.com/map-display-api/documentation/mapstyles/map-styles-v2 |
 | `map-styles-orbis` | Orbis style fetch (style assets endpoint) — used by dynamic-map when Orbis is enabled | https://developer.tomtom.com/assets-api/documentation/tomtom-orbis-maps/styles-assets/fetch-style |
-| `tomtom-dynamic-map` | Server-side rendering: MapLibre renders markers, routes and polygons and returns an image | https://developer.tomtom.com/assets-api/documentation/tomtom-orbis-maps/styles-assets/fetch-style |
+| `tomtom-dynamic-map` | **Advanced map rendering with custom markers, routes, and traffic visualization** | https://developer.tomtom.com/assets-api/documentation/tomtom-orbis-maps/styles-assets/fetch-style |
 
 
 Important: Orbis tools are currently in Public Preview and require explicit enablement for customer accounts. To request access, contact TomTom Sales and reference the Public Preview program:
