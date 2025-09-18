@@ -33,7 +33,9 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json}\"",
     "publish:npm": "npm publish --access restricted",
     "clean": "shx rm -rf dist coverage eslint-report.json",
-  "prebuild": "npm run clean && node scripts/generate-version.cjs"
+    "prebuild": "npm run clean && node scripts/generate-version.cjs",
+  "rebuild-native": "node ./scripts/rebuild-native.cjs",
+  "postinstall": "node ./scripts/rebuild-native.cjs || true"
   },
   "dependencies": {
     "@maplibre/maplibre-gl-native": "^6.2.0",

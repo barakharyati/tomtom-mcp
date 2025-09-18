@@ -16,7 +16,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderDynamicMap } from "./dynamicMapService";
 
 // Mock axios
 vi.mock("axios", () => {
@@ -151,6 +150,9 @@ vi.mock("../../utils/logger", () => ({
   },
 }));
 
+// Import the module under test after mocks are registered
+import { renderDynamicMap } from "./dynamicMapService";
+
 describe("Dynamic Map Service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -180,7 +182,15 @@ describe("Dynamic Map Service", () => {
         height: 600,
       };
 
-      const result = await renderDynamicMap(options);
+      // Inject mocked native modules explicitly to avoid dynamic-require timing issues
+      const dynamicMapModule = await import("./dynamicMapService");
+      dynamicMapModule.setNativeModules({
+        mbgl: (await import("@maplibre/maplibre-gl-native")).default,
+        createCanvas: (await import("canvas")).createCanvas,
+        turf: await import("@turf/turf"),
+      });
+
+      const result = await dynamicMapModule.renderDynamicMap(options);
 
       expect(result).toEqual({
         base64: Buffer.from("fake-image-data").toString("base64"),

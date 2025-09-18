@@ -21,9 +21,68 @@ import { logger } from "../../utils/logger";
 import { DynamicMapOptions, DynamicMapResponse } from "./dynamicMapTypes";
 import { getRoute, getMultiWaypointRoute } from "../routing/routingService";
 import { RouteOptions } from "../routing/types";
-import mbgl from "@maplibre/maplibre-gl-native";
-import { createCanvas } from "canvas";
-import * as turf from "@turf/turf";
+// Lazy-loaded native dependencies (initialized when needed)
+let mbgl: any = null;
+let createCanvas: any = null;
+let turf: any = null;
+
+// Allow tests or callers to inject native modules (useful for mocking)
+export function setNativeModules(mods: { mbgl?: any; createCanvas?: any; turf?: any }) {
+  if (mods.mbgl) mbgl = mods.mbgl;
+  if (mods.createCanvas) createCanvas = mods.createCanvas;
+  if (mods.turf) turf = mods.turf;
+}
+
+async function loadNativeModules() {
+  if (mbgl || createCanvas || turf) return;
+
+  // Helper: try require() then dynamic import() fallback for ESM packages
+  const loadModule = async (name: string) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      return require(name);
+    } catch (e) {
+      try {
+        // dynamic import returns a module namespace
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        const m = await import(name);
+        return m;
+      } catch (err) {
+        return null;
+      }
+    }
+  };
+
+  // MapLibre native (may be a native addon with ABI issues)
+  try {
+    const _mbgl = await loadModule("@maplibre/maplibre-gl-native");
+    mbgl = _mbgl ? (_mbgl && (_mbgl as any).default ? (mbgl = (_mbgl as any).default) : _mbgl) : null;
+  } catch (err: any) {
+    // eslint-disable-next-line no-console
+    console.warn("@maplibre/maplibre-gl-native load failed:", err && err.message);
+    mbgl = null;
+  }
+
+  // Canvas
+  try {
+    const _canvas = await loadModule("canvas");
+    createCanvas = _canvas ? (_canvas.createCanvas || (_canvas.default && _canvas.default.createCanvas)) : null;
+  } catch (err: any) {
+    // eslint-disable-next-line no-console
+    console.warn("canvas module load failed:", err && err.message);
+    createCanvas = null;
+  }
+
+  // Turf (pure JS) — prefer this even if native addons fail
+  try {
+    const _turf = await loadModule("@turf/turf");
+    turf = _turf ? (_turf && (_turf as any).default ? (_turf as any).default : _turf) : null;
+  } catch (err: any) {
+    // eslint-disable-next-line no-console
+    console.warn("@turf/turf load failed:", err && err.message);
+    turf = null;
+  }
+}
 
 /**
  * Dynamic Map Service
@@ -323,6 +382,16 @@ function calculateEnhancedBounds(
  * Render a dynamic map using MapLibre GL Native (adapted from original renderMap function)
  */
 async function renderMapWithMapLibre(options: any): Promise<Buffer> {
+  // Ensure native modules are loaded lazily to allow tests to mock them
+  await loadNativeModules();
+
+  // Turf is required for bounds calculation; fail early with a clear message
+  if (!turf) {
+    throw new Error(
+      "Dynamic map dependencies not available: @turf/turf is missing. Ensure @turf/turf is installed or mocked for tests."
+    );
+  }
+
   const {
     bbox,
     width,
