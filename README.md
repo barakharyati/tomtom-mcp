@@ -112,7 +112,7 @@ These guides help you integrate the MCP server with your tools and environments:
 
 ### Orbis equivalents (optional backend)
 
-By default the MCP tools use the Genesis TomTom APIs listed above. We also support using the "Orbis" backend for the same tool names. To enable Orbis for all tools set the environment variable `MAPS=ORBIS` 
+By default the MCP tools use the Genesis TomTom APIs listed above. We also support using the "Orbis" backend for the same tools. To enable Orbis for all tools set the environment variable `MAPS=ORBIS` 
 
 
 | Tool | Description | Orbis API (documentation) |
@@ -126,8 +126,6 @@ By default the MCP tools use the Genesis TomTom APIs listed above. We also suppo
 | `tomtom-waypoint-routing` | Multi-stop / waypoint route planning | https://developer.tomtom.com/routing-api/documentation/tomtom-orbis-maps/calculate-route |
 | `tomtom-reachable-range` | Compute coverage area by time or distance budget | https://developer.tomtom.com/routing-api/documentation/tomtom-orbis-maps/calculate-reachable-range |
 | `tomtom-traffic` | Traffic incidents and related details | https://developer.tomtom.com/traffic-api/documentation/tomtom-orbis-maps/incident-details |
-| `map-styles` | Genesis Map Styles v2 (style JSONs) — referenced for style structure | https://developer.tomtom.com/map-display-api/documentation/mapstyles/map-styles-v2 |
-| `map-styles-orbis` | Orbis style fetch (style assets endpoint) — used by dynamic-map when Orbis is enabled | https://developer.tomtom.com/assets-api/documentation/tomtom-orbis-maps/styles-assets/fetch-style |
 | `tomtom-dynamic-map` | **Advanced map rendering with custom markers, routes, and traffic visualization** | https://developer.tomtom.com/assets-api/documentation/tomtom-orbis-maps/styles-assets/fetch-style |
 
 
