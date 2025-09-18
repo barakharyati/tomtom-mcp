@@ -385,10 +385,37 @@ async function renderMapWithMapLibre(options: any): Promise<Buffer> {
   // Ensure native modules are loaded lazily to allow tests to mock them
   await loadNativeModules();
 
+  // Validate native modules and provide friendly errors when missing.
+  // MapLibre native (mbgl) is required for rendering. If it's missing or its
+  // shape doesn't expose a Map constructor, provide an actionable message.
+  if (!mbgl || (typeof (mbgl as any).Map !== "function" && !(mbgl as any).default && typeof (mbgl as any).default?.Map !== "function")) {
+    throw new Error(
+      `Dynamic map native dependency failed to load: @maplibre/maplibre-gl-native (mbgl) is not available or does not expose a Map constructor. ` +
+        `This commonly happens when the native addon was built for a different Node ABI or Node version (current Node: ${process.version}).\n` +
+        `Recommended actions:\n` +
+        `  1) Rebuild the native addon for the Node version the server runs: run \`npm run rebuild-native\` using the same Node binary that will run the server.\n` +
+        `  2) If you use a packaged Claude/desktop runtime, build the native binary for that runtime's Node ABI (or install a prebuilt that matches).\n` +
+        `  3) For test environments you can inject mocks by calling setNativeModules({ mbgl, createCanvas, turf }) before importing this module, or set env var \`DYNAMIC_MAP_TEST_MODE=1\` (if you add support) to skip native rendering.\n` +
+        `  4) If the problem persists, run \`npm ci\` and then \`npm run rebuild-native\`, and file an issue including the Node version and error logs.`
+    );
+  }
+
   // Turf is required for bounds calculation; fail early with a clear message
   if (!turf) {
     throw new Error(
       "Dynamic map dependencies not available: @turf/turf is missing. Ensure @turf/turf is installed or mocked for tests."
+    );
+  }
+
+  // Canvas createCanvas is required to convert raw image bytes to PNG. Provide a
+  // friendly error if it's missing (common when native build deps for `canvas` are absent).
+  if (!createCanvas || typeof createCanvas !== "function") {
+    throw new Error(
+      `Dynamic map dependency missing: cannot find \`createCanvas\` from the \`canvas\` package. ` +
+        `On macOS/Linux you may need build dependencies (cairo, pango, libpng). Try: \n` +
+        `  - Install system libs (macOS brew: \`brew install pkg-config cairo pango libpng jpeg giflib\`).\n` +
+        `  - Then run: \`npm ci\` and \`npm rebuild canvas --update-binary\` or \`npm run rebuild-native\`.\n` +
+        `Alternatively, inject a mock canvas via setNativeModules({ createCanvas: mockCreateCanvas }).`
     );
   }
 

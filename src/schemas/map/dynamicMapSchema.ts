@@ -188,13 +188,5 @@ export const tomtomDynamicMapSchema = {
     .optional()
     .describe(
       "Route metadata for traffic visualization. Can be single object for one route or array for multiple routes."
-    ),
-
-  // Environment selection
-  use_orbis: z
-    .boolean()
-    .optional()
-    .describe(
-      "Use TomTom Orbis maps instead of default Genesis maps. Default: false (uses Genesis maps)."
-    ),
+    )
 };
