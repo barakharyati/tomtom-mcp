@@ -6,6 +6,7 @@ The following TomTom employees maintain this project:
 * [Sanae Benjeddi]
 * [Parthipan Ramakrishnan]
 * [Carlos Prieto]
+* [Massimiliano Ungheretti]
 
 ## Responsibilities
 
@@ -19,7 +20,4 @@ Maintainers are responsible for:
 
 ## Contact
 
-If you have questions or need assistance with this project, you can:
-
-* Open an issue in the GitHub repository
-* Contact the maintainers directly via email
+If you have questions or need assistance with this project, you can open an issue in the GitHub repository.
