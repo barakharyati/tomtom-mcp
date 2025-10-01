@@ -24,4 +24,4 @@ EXPOSE 3000
 ENV NODE_ENV=production
 
 # Run in HTTP mode using the executable script
-CMD [ "./bin/tomtom-mcp-http.js" ]
+CMD [ "node", "./bin/tomtom-mcp-http.js" ]

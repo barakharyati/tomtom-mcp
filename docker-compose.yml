@@ -11,4 +11,4 @@ services:
     ports:
       - "3000:3000"
     restart: unless-stopped
-    command: ./bin/tomtom-mcp-http.js
+    command: node ./bin/tomtom-mcp-http.js
