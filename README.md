@@ -70,9 +70,49 @@ npx @tomtom-org/tomtom-mcp@latest --key your_api_key
 ---
 
 ### Usage
+
+**Stdio Mode (Default - for AI assistants like Claude):**
 ```bash
-# Start MCP server
+# Start MCP server via stdio
 npx @tomtom-org/tomtom-mcp@latest
+```
+
+**HTTP Mode (for web applications and API integration):**
+```bash
+# or
+npm run start:http
+# or after building the project
+node bin/tomtom-mcp-http.js
+```
+
+When running in HTTP mode, you need to include your API key in the Authorization header:
+
+```
+Authorization: Bearer <API_KEY>
+```
+
+For example, to make a request using curl:
+```bash
+curl --location 'http://localhost:3000/mcp' \
+--header 'Accept: application/json,text/event-stream' \
+--header 'Authorization: Bearer <API KEY>' \
+--header 'Content-Type: application/json' \
+--data '{
+  "method": "tools/call",
+  "params": {
+    "name": "tomtom-geocode",
+    "arguments": {
+        "query": "Amsterdam Central Station"
+    }
+  },
+  "jsonrpc": "2.0",
+  "id": 24
+}'
+```
+
+The Docker setup is also configured to use this HTTP mode with the same authentication method.
+
+```bash
 # Get help
 npx @tomtom-org/tomtom-mcp@latest --help
 ```
@@ -112,7 +152,7 @@ These guides help you integrate the MCP server with your tools and environments:
 
 ### Orbis equivalents (optional backend)
 
-By default the MCP tools use the Genesis TomTom APIs listed above. We also support using the "Orbis" backend for the same tools. To enable Orbis for all tools set the environment variable `MAPS=ORBIS` 
+By default the MCP tools use the Genesis TomTom APIs listed above. We also support using the "Orbis" backend for the same tools. To enable Orbis for all tools set the environment variable `MAPS=Orbis` 
 
 
 | Tool | Description | Orbis API (documentation) |

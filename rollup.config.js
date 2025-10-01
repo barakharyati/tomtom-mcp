@@ -20,47 +20,103 @@ import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import typescript from '@rollup/plugin-typescript';
 
-/** @type {import('rollup').RollupOptions} */
-export default {
-  input: 'src/index.ts',       // adjust if your entry is named differently
-  output: [
-    {
-      file: 'dist/index.esm.js',
-      format: 'es',
-      sourcemap: true
-    },
-    {
-      file: 'dist/index.cjs.js',
-      format: 'cjs',
-      sourcemap: true
-    }
-  ],
-  external: [
-    // MCP SDK
-    '@modelcontextprotocol/sdk',
-    // HTTP client
-    'axios',
-    // Static imports for dynamic maps
-    '@maplibre/maplibre-gl-native',
-    'canvas',
-    '@turf/turf',
-    // Validation
-    'zod',
-    // Environment
-    'dotenv',
-    // Node built-ins
-    'fs', 'path', 'crypto', 'util', 'url', 'events', 'stream', 'buffer'
-  ],
-  plugins: [
-    resolve({
-      preferBuiltins: true,
-      exportConditions: ['node']
-    }),
-    commonjs(),
-    json(),
-    typescript({
-      tsconfig: './tsconfig.json',
-      // no declaration generation here
-    })
-  ]
-};
+/** @type {import('rollup').RollupOptions[]} */
+export default [
+  // Stdio MCP server entry point
+  {
+    input: 'src/index.ts',
+    output: [
+      {
+        file: 'dist/index.esm.js',
+        format: 'es',
+        sourcemap: true
+      },
+      {
+        file: 'dist/index.cjs.js',
+        format: 'cjs',
+        sourcemap: true
+      }
+    ],
+    external: [
+      // MCP SDK
+      '@modelcontextprotocol/sdk',
+      // HTTP client
+      'axios',
+      'node-fetch',
+      // Static imports for dynamic maps
+      '@maplibre/maplibre-gl-native',
+      'canvas',
+      '@turf/turf',
+      // Validation
+      'zod',
+      // Environment
+      'dotenv',
+      // TypeScript runtime
+      'tslib',
+      // Node built-ins
+      'fs', 'path', 'crypto', 'util', 'url', 'events', 'stream', 'buffer'
+    ],
+    plugins: [
+      resolve({
+        preferBuiltins: true,
+        exportConditions: ['node']
+      }),
+      commonjs(),
+      json(),
+      typescript({
+        tsconfig: './tsconfig.json',
+        // no declaration generation here
+      })
+    ]
+  },
+  // HTTP MCP server entry point
+  {
+    input: 'src/indexHttp.ts',
+    output: [
+      {
+        file: 'dist/indexHttp.esm.js',
+        format: 'es',
+        sourcemap: true
+      },
+      {
+        file: 'dist/indexHttp.cjs.js',
+        format: 'cjs',
+        sourcemap: true
+      }
+    ],
+    external: [
+      // MCP SDK
+      '@modelcontextprotocol/sdk',
+      // HTTP framework
+      'express',
+      'cors',
+      // HTTP client
+      'axios',
+      'node-fetch',
+      // Static imports for dynamic maps
+      '@maplibre/maplibre-gl-native',
+      'canvas',
+      '@turf/turf',
+      // Validation
+      'zod',
+      // Environment
+      'dotenv',
+      // TypeScript runtime
+      'tslib',
+      // Node built-ins
+      'fs', 'path', 'crypto', 'util', 'url', 'events', 'stream', 'buffer', 'http', 'async_hooks'
+    ],
+    plugins: [
+      resolve({
+        preferBuiltins: true,
+        exportConditions: ['node']
+      }),
+      commonjs(),
+      json(),
+      typescript({
+        tsconfig: './tsconfig.json',
+        // no declaration generation here
+      })
+    ]
+  }
+];

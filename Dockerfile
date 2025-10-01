@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:22-alpine
 
 # Create app directory
 WORKDIR /app
@@ -8,14 +8,14 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy built app
 COPY dist/ ./dist/
 COPY bin/ ./bin/
 
-# Make the binary executable
-RUN chmod +x ./bin/tomtom-mcp
+# Make the binaries executable
+RUN chmod +x ./bin/tomtom-mcp-http.js
 
 # Expose port for HTTP server (optional)
 EXPOSE 3000
@@ -23,5 +23,5 @@ EXPOSE 3000
 # Set environment variables
 ENV NODE_ENV=production
 
-# Use CMD to run the application in production mode
-CMD [ "npx", "bin/tomtom-mcp.js" ]
+# Run in HTTP mode using the executable script
+CMD [ "./bin/tomtom-mcp-http.js" ]

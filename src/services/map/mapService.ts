@@ -35,7 +35,6 @@ export function getStaticMapUrl(options: MapOptions): string {
   const layer = options.layer || DEFAULT_MAP_OPTIONS.layer;
   const view = options.view || DEFAULT_MAP_OPTIONS.view; // Geopolitical view
   const format = options.format || DEFAULT_MAP_OPTIONS.format; // png has better quality and supports transparency
-  const apiKey = tomtomClient.defaults.params?.key || "";
   const baseUrl = tomtomClient.defaults.baseURL || "";
   const apiVersion = API_VERSION.MAP || 1; // Default to version 1 if not defined
 
@@ -44,8 +43,8 @@ export function getStaticMapUrl(options: MapOptions): string {
     throw new Error("Width and height must be between 1 and 8192 pixels");
   }
 
-  // Start building the URL
-  let url = `${baseUrl}/map/${apiVersion}/staticimage?key=${apiKey}`;
+  // Start building the URL - tomtomClient will automatically append the API key
+  let url = `/map/${apiVersion}/staticimage?`;
 
   // Either center+zoom or bbox must be provided
   if (options.center) {
@@ -56,14 +55,14 @@ export function getStaticMapUrl(options: MapOptions): string {
       throw new Error("Zoom level must be between 0 and 22");
     }
 
-    url += `&center=${options.center.lon},${options.center.lat}&zoom=${zoom}`;
+    url += `center=${options.center.lon},${options.center.lat}&zoom=${zoom}`;
 
     logger.debug(
       `Generated static map URL with center: (${options.center.lat}, ${options.center.lon}), zoom: ${zoom}`
     );
   } else if (options.bbox && options.bbox.length === 4) {
     // Bounding box format: [west, south, east, north]
-    url += `&bbox=${options.bbox[0]},${options.bbox[1]},${options.bbox[2]},${options.bbox[3]}`;
+    url += `bbox=${options.bbox[0]},${options.bbox[1]},${options.bbox[2]},${options.bbox[3]}`;
 
     logger.debug(`Generated static map URL with bbox: [${options.bbox.join(", ")}]`);
   } else {
@@ -106,23 +105,28 @@ export async function getStaticMapImage(
     // Get the URL first
     const mapUrl = getStaticMapUrl(options);
 
-    // Use fetch to download the image. Include TomTom-User-Agent header for tracking.
-    const response = await fetch(mapUrl, {
-      method: "GET",
-      headers: {
-        "TomTom-User-Agent": `TomTomMCPSDK/${VERSION}`,
-      },
+    // Log the URL before making the request
+    logger.info(`Making static map request to: ${tomtomClient.defaults.baseURL}${mapUrl}`);
+
+    // Use tomtomClient to download the image (it automatically includes proper headers)
+    const response = await tomtomClient.get(mapUrl, {
+      responseType: "arraybuffer",
     });
 
-    if (!response.ok) {
+    // Log the actual URL that was requested (including any modifications made by axios)
+    if (response.config && response.config.url) {
+      logger.info(`Full request URL was: ${response.config.url}`);
+    }
+
+    if (!response.status || response.status >= 400) {
       throw new Error(`Failed to fetch map image: HTTP ${response.status}`);
     }
 
     // Get the content type from the response headers
-    const contentType = response.headers.get("content-type") || "image/png";
+    const contentType = response.headers?.["content-type"] || "image/png";
 
-    // Get the image data as an array buffer
-    const imageBuffer = await response.arrayBuffer();
+    // The image data is already in the response
+    const imageBuffer = response.data;
 
     // Convert the buffer to base64
     const base64 = Buffer.from(imageBuffer).toString("base64");

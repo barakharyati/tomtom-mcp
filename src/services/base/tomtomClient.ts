@@ -16,6 +16,7 @@
 
 import axios, { AxiosInstance } from "axios";
 import dotenv from "dotenv";
+import { AsyncLocalStorage } from "async_hooks";
 import { logger } from "../../utils/logger";
 import { VERSION } from "../../version";
 
@@ -50,16 +51,95 @@ function getApiKeyFromEnv(): string | undefined {
 
 /**
  * Core Axios client for TomTom API requests
- * Always reads the current API key from environment variables
+ * Uses dynamic API key resolution for both environment and session-based keys
  */
 export const tomtomClient: AxiosInstance = axios.create({
   baseURL: CONFIG.BASE_URL,
-  params: { key: getApiKeyFromEnv() },
   paramsSerializer: { indexes: null },
   headers: {
     "TomTom-User-Agent": `TomTomMCPSDK/${VERSION}`,
   },
 });
+
+// Request interceptor to add API key dynamically
+tomtomClient.interceptors.request.use(
+  (config) => {
+    // Get API key from session context or environment
+    const apiKey = getSessionApiKey() || getApiKeyFromEnv();
+
+    if (apiKey) {
+      // Add API key to request params
+      // config.params = { ...config.params, key: apiKey };
+      if (!config.params?.key) {
+        config.params = { ...config.params, key: apiKey };
+      }
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * Request context for session-specific configuration
+ */
+interface RequestContext {
+  apiKey: string;
+  backend?: "genesis" | "orbis";
+}
+
+/**
+ * AsyncLocalStorage for proper per-request context isolation
+ * This ensures multiple concurrent HTTP sessions don't interfere with each other
+ */
+const requestContext = new AsyncLocalStorage<RequestContext>();
+
+/**
+ * Get session-specific API key from current async context
+ */
+export function getSessionApiKey(): string | undefined {
+  const context = requestContext.getStore();
+  return context?.apiKey;
+}
+
+/**
+ * Set session-specific configuration for the current async context
+ */
+export function setSessionContext(apiKey: string, backend?: "genesis" | "orbis"): void {
+  const context = requestContext.getStore();
+  if (context) {
+    context.apiKey = apiKey;
+    context.backend = backend;
+  }
+}
+
+/**
+ * Run function within a session context (for HTTP requests)
+ */
+export function runWithSessionContext<T>(
+  apiKey: string,
+  backend: "genesis" | "orbis",
+  fn: () => T
+): T {
+  return requestContext.run({ apiKey, backend }, fn);
+}
+
+/**
+ * Get current session backend
+ */
+export function getSessionBackend(): "genesis" | "orbis" | undefined {
+  const context = requestContext.getStore();
+  return context?.backend;
+}
+
+/**
+ * Get the effective API key (session or environment)
+ */
+export function getEffectiveApiKey(): string | undefined {
+  return getSessionApiKey() || getApiKeyFromEnv();
+}
 
 /**
  * Helper function to validate that API key exists before making calls
@@ -67,9 +147,11 @@ export const tomtomClient: AxiosInstance = axios.create({
  * @returns {void} Nothing if validation passes
  */
 export function validateApiKey(): void {
-  const apiKey = getApiKeyFromEnv();
+  const apiKey = getEffectiveApiKey();
   if (!apiKey) {
-    throw new Error("TomTom API key is not set. Please set TOMTOM_API_KEY environment variable.");
+    throw new Error(
+      "TomTom API key is not set. Please set TOMTOM_API_KEY environment variable or provide via session configuration."
+    );
   }
 }
 
