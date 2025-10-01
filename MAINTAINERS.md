@@ -2,10 +2,10 @@
 
 The following TomTom employees maintain this project:
 
-* [Rohith Rangaraju] - [rohith.rangaraju@tomtom.com]
-* [Sanae Benjeddi] - [sanae.benjeddi@tomtom.com]
-* [Parthipan Ramakrishnan] - [parthipan.ramakrishnan@tomtom.com]
-* [Carlos Prieto] - [carlos.prietofernandez@tomtom.com]
+* [Rohith Rangaraju]
+* [Sanae Benjeddi]
+* [Parthipan Ramakrishnan]
+* [Carlos Prieto]
 
 ## Responsibilities
 
