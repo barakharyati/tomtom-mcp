@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   tomtom-mcp:
@@ -7,8 +6,35 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
+      # Server configuration
       - PORT=3000
+      - NODE_ENV=production
+      # Maps backend configuration (genesis or orbis)
+      - MAPS=genesis
+      # Required for proper GPU-less rendering
+      - LIBGL_ALWAYS_SOFTWARE=1
+      # Uncomment and set your TomTom API key when running in production
+      # - TOMTOM_API_KEY=your_tomtom_api_key_here
+      # CORS settings (optional)
+      # - ALLOWED_ORIGINS=http://localhost:3000,https://yourapp.com
     ports:
       - "3000:3000"
+    volumes:
+      # Mount a volume for logs and cache to improve performance
+      - tomtom-mcp-data:/app/.cache
+    # Health check to verify the server is running properly
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped
-    command: node ./bin/tomtom-mcp-http.js
+    # Limit memory to avoid any issues
+    mem_limit: 4G
+    init: true  # Proper signal handling
+
+# Volumes definition
+volumes:
+  tomtom-mcp-data:
+    driver: local
