@@ -8,13 +8,9 @@ services:
     environment:
       # Server configuration
       - PORT=3000
-      - NODE_ENV=production
+      # - NODE_ENV=production
       # Maps backend configuration (genesis or orbis)
       - MAPS=genesis
-      # Required for proper GPU-less rendering
-      - LIBGL_ALWAYS_SOFTWARE=1
-      # Uncomment and set your TomTom API key when running in production
-      # - TOMTOM_API_KEY=your_tomtom_api_key_here
       # CORS settings (optional)
       # - ALLOWED_ORIGINS=http://localhost:3000,https://yourapp.com
     ports:
