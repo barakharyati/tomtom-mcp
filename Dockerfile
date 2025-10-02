@@ -58,7 +58,7 @@ RUN npm run build
 EXPOSE 3000
 
 # Create a startup script to run Xvfb before starting the application
-RUN echo '#!/bin/bash\nXvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset &\nsleep 1\nexec "$@"' > /app/entrypoint.sh \
+RUN echo '#!/bin/bash\n\n# Clean up any existing Xvfb lock files\nif [ -f /tmp/.X99-lock ]; then\n  rm -f /tmp/.X99-lock\nfi\n\n# Kill any existing Xvfb processes\npkill Xvfb || true\n\n# Start Xvfb\nXvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset &\nsleep 1\n\n# Start the application\nexec "$@"' > /app/entrypoint.sh \
  && chmod +x /app/entrypoint.sh
 
 # Use the entrypoint script to start Xvfb first, then the application
