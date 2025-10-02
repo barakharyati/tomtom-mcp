@@ -18,6 +18,27 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          
+      - name: Install system dependencies for MapLibre GL Native
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libopengl0 libglvnd0 libglx0 libgl1-mesa-glx libgl1-mesa-dri \
+            libx11-6 libxext6 libxrender1 libxcb1 \
+            xvfb x11-utils xauth mesa-utils \
+            libcurl4 libuv1 libwebp7 libpng16-16 zlib1g libbz2-1.0 libjpeg-turbo8 libicu70 \
+            libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgif7 librsvg2-2 \
+            libpixman-1-0 libfreetype6 libfontconfig1 fonts-dejavu-core
+      
+      - name: Start Xvfb
+        run: |
+          # Remove any existing X lock files
+          sudo rm -f /tmp/.X99-lock || true
+          # Start Xvfb
+          Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset &
+          echo "DISPLAY=:99" >> $GITHUB_ENV
+          echo "LIBGL_ALWAYS_SOFTWARE=1" >> $GITHUB_ENV
+          echo "RENDERER=software" >> $GITHUB_ENV
       
       - name: Install dependencies
         run: npm ci
@@ -35,3 +56,59 @@ jobs:
         run: npm run test:all
         env:
           TOMTOM_API_KEY: ${{ secrets.TOMTOM_API_KEY }}
+          DISPLAY: :99
+          LIBGL_ALWAYS_SOFTWARE: 1
+          RENDERER: software
+          
+      - name: Test dynamic map functionality specifically
+        run: |
+          # Create a simple test script for the dynamic map tool
+          cat > test-dynamic-map.js << 'EOF'
+          const { createServer } = require('./dist/index');
+          
+          async function testDynamicMap() {
+            const server = await createServer();
+            try {
+              const result = await server.tools.call('tomtom-dynamic-map', {
+                center: {
+                  lat: 52.3791,
+                  lon: 4.8994,
+                  label: "Amsterdam"
+                },
+                zoom: 12,
+                width: 800,
+                height: 600,
+                markers: [
+                  {
+                    lat: 52.3791,
+                    lon: 4.8994,
+                    label: "Amsterdam",
+                    color: "#ff0000"
+                  }
+                ]
+              });
+              
+              // Verify we got an image back
+              if (!result.content || !result.content[0] || result.content[0].type !== 'image' || !result.content[0].data) {
+                console.error('❌ Dynamic map test failed: No image data returned');
+                process.exit(1);
+              }
+              
+              console.log('✅ Dynamic map test passed successfully!');
+              process.exit(0);
+            } catch (error) {
+              console.error('❌ Dynamic map test failed with error:', error);
+              process.exit(1);
+            }
+          }
+          
+          testDynamicMap();
+          EOF
+          
+          # Run the dynamic map test
+          node test-dynamic-map.js
+        env:
+          TOMTOM_API_KEY: ${{ secrets.TOMTOM_API_KEY }}
+          DISPLAY: :99
+          LIBGL_ALWAYS_SOFTWARE: 1
+          RENDERER: software
