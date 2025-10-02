@@ -8,7 +8,6 @@ services:
     environment:
       # Server configuration
       - PORT=3000
-      # - NODE_ENV=production
       # Maps backend configuration (genesis or orbis)
       - MAPS=genesis
       # CORS settings (optional)
