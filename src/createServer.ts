@@ -27,28 +27,61 @@ import { createRoutingOrbisTools } from "./tools/routingOrbisTools";
 import { createTrafficOrbisTools } from "./tools/trafficOrbisTools";
 
 /**
+ * Configuration interface for server creation
+ */
+export interface ServerConfig {
+  apiKey?: string;
+  mapsBackend?: "genesis" | "orbis";
+  userAgent?: string;
+}
+
+/**
  * Factory function that creates and configures a TomTom MCP server instance
  *
- * Maps Environment Configuration:
- * - MAPS=orbis (or MAPS=ORBIS/Orbis) → Uses Orbis maps APIs (/maps/orbis/*)
- * - Default (no MAPS var or other values) → Uses Genesis maps APIs (standard TomTom APIs)
+ * @param config Optional configuration. If not provided, uses environment variables
+ *
+ * Maps Configuration:
+ * - config.mapsBackend === "orbis" → Uses Orbis maps APIs (/maps/orbis/*)
+ * - Default → Uses Genesis maps APIs (standard TomTom APIs)
  *
  * Examples:
- * - MAPS=orbis npm start → Orbis maps
- * - npm start → Genesis maps (default)
+ * - createServer({ apiKey: "key", mapsBackend: "orbis" }) → Orbis maps
+ * - createServer() → Genesis maps from environment variables
  */
-export function createServer(): McpServer {
-  const mapsEnv = process.env.MAPS?.toLowerCase();
-  const isOrbis = mapsEnv === "orbis";
+export function createServer(config?: ServerConfig): McpServer {
+  // Determine configuration source
+  let isOrbis: boolean;
+  let apiKey: string | undefined;
+
+  if (config) {
+    // Use provided configuration
+    isOrbis = config.mapsBackend === "orbis";
+    apiKey = config.apiKey;
+  } else {
+    // Fallback to environment variables (for stdio mode compatibility)
+    const mapsEnv = process.env.MAPS?.toLowerCase();
+    isOrbis = mapsEnv === "orbis";
+    apiKey = process.env.TOMTOM_API_KEY;
+  }
+
   const serverName = isOrbis ? "TomTom Orbis MCP Server" : "TomTom Genesis MCP Server";
 
   logger.info(`Initializing ${serverName} (Maps: ${isOrbis ? "Orbis" : "Genesis"})`);
-  validateServerApiKey();
+
+  // Validate API key if provided in config, otherwise use environment validation
+  if (config?.apiKey) {
+    validateProvidedApiKey(config.apiKey);
+  } else {
+    validateServerApiKey();
+  }
 
   const server = new McpServer({
     name: serverName,
     version: "1.1.0",
   });
+
+  // Note: Session-specific API key context is managed at the HTTP request level
+  // using AsyncLocalStorage for proper isolation between concurrent sessions
 
   // Register all tools
   registerTools(server, isOrbis);
@@ -58,7 +91,7 @@ export function createServer(): McpServer {
 }
 
 /**
- * Validates API key at startup
+ * Validates API key at startup (from environment)
  */
 function validateServerApiKey(): void {
   try {
@@ -68,6 +101,16 @@ function validateServerApiKey(): void {
     logger.error(`❌ API key validation failed: ${error.message}`);
     logger.warn("Server will start but API calls may fail without valid credentials");
   }
+}
+
+/**
+ * Validates a provided API key
+ */
+function validateProvidedApiKey(apiKey: string): void {
+  if (!apiKey || apiKey.trim().length === 0) {
+    throw new Error("API key cannot be empty");
+  }
+  logger.info("✅ Session-specific TomTom API key provided");
 }
 
 /**

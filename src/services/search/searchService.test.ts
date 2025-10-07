@@ -1,4 +1,3 @@
-/* global setTimeout */
 /*
  * Copyright (C) 2025 TomTom NV
  *

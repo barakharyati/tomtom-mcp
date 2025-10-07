@@ -1,6 +1,6 @@
 {
   "name": "@tomtom-org/tomtom-mcp",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "MCP server integrating TomTom APIs",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
@@ -11,15 +11,18 @@
     "require": "./dist/index.cjs.js"
   },
   "bin": {
-    "tomtom-mcp": "./bin/tomtom-mcp.js"
+    "tomtom-mcp": "./bin/tomtom-mcp.js",
+    "tomtom-mcp-http": "./bin/tomtom-mcp-http.js"
   },
   "scripts": {
     "build:ts": "tsc --emitDeclarationOnly --declaration --declarationMap",
     "build:rollup": "rollup -c",
     "build": "npm run build:ts && npm run build:rollup",
-    "build:bin": "shx chmod +x bin/tomtom-mcp.js",
-    "start": "node dist/index.js",
+    "build:bin": "shx chmod +x bin/tomtom-mcp.js && shx chmod +x bin/tomtom-mcp-http.js",
+    "start": "node dist/index.esm.js",
+    "start:http": "node dist/indexHttp.esm.js",
     "dev": "cross-env NODE_OPTIONS=\"--no-warnings --loader ts-node/esm\" node src/index.ts",
+    "dev:http": "cross-env NODE_OPTIONS=\"--no-warnings --loader ts-node/esm\" node src/indexHttp.ts",
     "prepare": "npm run build",
     "test": "vitest run --coverage",
     "test:watch": "vitest --watch",
@@ -45,6 +48,7 @@
     "@turf/turf": "^7.2.0",
     "axios": "^1.6.7",
     "canvas": "^3.2.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "node-fetch": "^3.3.2",
     "rollup": "^4.44.1",
@@ -56,6 +60,8 @@
   "devDependencies": {
     "@eslint/config-array": "^0.21.0",
     "@eslint/object-schema": "^2.1.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
     "@types/node": "^20.6.0",
     "@typescript-eslint/eslint-plugin": "^8.35.1",
     "@typescript-eslint/parser": "^8.35.1",
