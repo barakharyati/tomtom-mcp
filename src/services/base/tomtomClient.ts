@@ -20,6 +20,10 @@ import { AsyncLocalStorage } from "async_hooks";
 import { logger } from "../../utils/logger";
 import { VERSION } from "../../version";
 
+// Variable to track if we're running in HTTP server mode
+// This will be set to true in indexHttp.ts
+export let isHttpMode = false;
+
 // Load environment variables
 dotenv.config();
 
@@ -57,6 +61,7 @@ export const tomtomClient: AxiosInstance = axios.create({
   baseURL: CONFIG.BASE_URL,
   paramsSerializer: { indexes: null },
   headers: {
+    // Default to standard user-agent for stdio mode - will be updated if HTTP mode is set
     "TomTom-User-Agent": `TomTomMCPSDK/${VERSION}`,
   },
 });
@@ -153,6 +158,21 @@ export function validateApiKey(): void {
       "TomTom API key is not set. Please set TOMTOM_API_KEY environment variable or provide via session configuration."
     );
   }
+}
+
+/**
+ * Set the mode to HTTP server mode
+ * This changes the user-agent header to indicate HTTP mode
+ */
+export function setHttpMode(): void {
+  isHttpMode = true;
+  
+  // Update the user-agent header to reflect HTTP mode
+  if (tomtomClient.defaults.headers) {
+    tomtomClient.defaults.headers["TomTom-User-Agent"] = `TomTomMCPSDKHttp/${VERSION}`;
+  }
+  
+  logger.debug("TomTom MCP client set to HTTP mode, user-agent updated accordingly");
 }
 
 /**
