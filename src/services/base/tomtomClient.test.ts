@@ -42,7 +42,7 @@ vi.mock("axios", async (importOriginal) => {
 });
 
 // Now import the module under test
-import { validateApiKey, API_VERSION } from "./tomtomClient";
+import { validateApiKey, API_VERSION, isHttpMode, setHttpMode, tomtomClient } from "./tomtomClient";
 
 describe("TomTom Client", () => {
   beforeEach(() => {
@@ -80,5 +80,16 @@ describe("TomTom Client", () => {
       TRAFFIC: 5,
       MAP: 1,
     });
+  });
+  
+  it("should use different User-Agent headers based on mode", () => {
+    // Default mode (stdio)
+    expect(isHttpMode).toBe(false);
+    expect(tomtomClient.defaults.headers["TomTom-User-Agent"]).toContain("TomTomMCPSDK/");
+    
+    // Set HTTP mode
+    setHttpMode();
+    expect(isHttpMode).toBe(true);
+    expect(tomtomClient.defaults.headers["TomTom-User-Agent"]).toContain("TomTomMCPSDKHttp/");
   });
 });
