@@ -35,6 +35,8 @@ import { existsSync } from 'fs';
 // Load environment variables
 dotenv.config();
 
+console.log("Hello, world! H1");
+
 // Get directory paths and find server
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
